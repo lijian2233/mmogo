@@ -1,0 +1,23 @@
+[server]
+    port=":9999"
+    mode="test"
+    #release
+    ginmode="debug"
+
+
+[opayChannelMysql]
+    Master="channeluser:M3e3HbJ68Jqz@tcp(8.208.100.47:3306)/opay_channel?charset=utf8mb4"
+    maxOpenConns=5
+    maxIdleConns=1
+
+[opayStatisMysql]
+    Master="root:123456@tcp(127.0.0.1:3306)/opay_statistics?charset=utf8mb4"
+    maxOpenConns=5
+    maxIdleConns=1
+
+[log]
+    logPath="/Users/lijian/logs/channel.log"
+    logLevel="debug"
+    maxSize=500
+    maxAge=30
+    MaxBackups=7

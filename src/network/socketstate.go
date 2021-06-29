@@ -1,0 +1,8 @@
+package network
+
+const (
+	SOCKET_STATE_CREATE     = 1
+	SOCKET_STATE_OPEN       = 2
+	SOCKET_STATE_CLOSE      = 3
+	SOCKET_STATE_CONNECTING = 4
+)

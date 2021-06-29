@@ -2,6 +2,7 @@ package timer
 
 import (
 	rbt "github.com/emirpasic/gods/trees/redblacktree"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -12,6 +13,7 @@ type syncTimer struct {
 	idMap       *rbt.Tree
 	timeoutMap  *rbt.Tree
 	exitCh      chan bool
+	once        sync.Once
 }
 
 func (timer *syncTimer) Init() {
@@ -26,17 +28,13 @@ func (timer *syncTimer) GetMode() int {
 }
 
 func (timer *syncTimer) Start() error {
-	if timer.state != State_Init {
-		if timer.state == State_Running {
-			return Err_Start_Timer_Is_Running
-		} else {
-			return Err_Start_Timer_Is_Exiting
-		}
-	}
+	timer.once.Do(
+		func() {
+			if !atomic.CompareAndSwapUint32(&timer.state, State_Init, State_Running) {
+				panic("sync timer running multi go routine")
+			}
+		})
 
-	if !atomic.CompareAndSwapUint32(&timer.state, State_Init, State_Running) {
-		panic("sync timer running multi go routine")
-	}
 	return nil
 }
 

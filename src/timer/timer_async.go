@@ -19,6 +19,7 @@ type asyncTimer struct {
 	runningTimeoutTree *rbt.Tree
 	cancelQueue        *treeset.Set
 	exitCh             chan bool
+	once               sync.Once
 }
 
 func (timer *asyncTimer) GetMode() int {
@@ -90,19 +91,26 @@ func (timer *asyncTimer) run() {
 				break
 			}
 		}
+
+		time.Sleep(time.Microsecond * 10)
 	}
 }
 
 func (timer *asyncTimer) Start() error {
-	if !atomic.CompareAndSwapUint32(&timer.state, State_Init, State_Running) {
-		if timer.state == State_Running {
-			return Err_Start_Timer_Is_Running
-		}
-		return Err_Start_Timer_Is_Exiting
-	}
+	err := error(nil)
+	timer.once.Do(
+		func() {
+			if !atomic.CompareAndSwapUint32(&timer.state, State_Init, State_Running) {
+				if timer.state == State_Running {
+					err =  Err_Start_Timer_Is_Running
+				}
+				err =  Err_Start_Timer_Is_Exiting
+				return
+			}
 
-	go timer.run()
-	return nil
+			go timer.run()
+		})
+	return err
 }
 
 func (timer *asyncTimer) clear() {
@@ -114,7 +122,8 @@ func (timer *asyncTimer) clear() {
 }
 
 func (timer *asyncTimer) Stop() <-chan bool {
-	if timer.state == State_Init {
+	state := atomic.LoadUint32(&timer.state)
+	if state == State_Init {
 		if atomic.CompareAndSwapUint32(&timer.state, State_Init, State_Exited) {
 			timer.clear()
 			timer.exitCh <- true
@@ -122,12 +131,12 @@ func (timer *asyncTimer) Stop() <-chan bool {
 		}
 	}
 
-	if (timer.state == State_Exited) {
+	if (state == State_Exited) {
 		timer.exitCh <- true
 		return timer.exitCh
 	}
 
-	if timer.state == State_Running {
+	if state == State_Running {
 		if atomic.CompareAndSwapUint32(&timer.state, State_Running, State_Exiting) {
 			cond := timer.cond
 			if cond != nil {

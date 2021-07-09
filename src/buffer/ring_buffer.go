@@ -3,13 +3,12 @@ package buffer
 import (
 	"errors"
 	"mmogo/common"
-	"sync"
+	"unsafe"
 )
 
 // Copyright 2019 smallnest. All rights reserved.
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
-
 
 var (
 	ErrTooManyDataToWrite = errors.New("too many data to write")
@@ -25,7 +24,6 @@ type RingBuffer struct {
 	r      int // next position to read
 	w      int // next position to write
 	isFull bool
-	mu     sync.Mutex
 }
 
 // New returns a new RingBuffer whose buffer has the given size.
@@ -44,12 +42,9 @@ func (r *RingBuffer) Read(p []byte) (n int, err error) {
 		return 0, nil
 	}
 
-	r.mu.Lock()
 	n, err = r.read(p)
-	r.mu.Unlock()
 	return n, err
 }
-
 
 func (r *RingBuffer) read(p []byte) (n int, err error) {
 	if r.w == r.r && !r.isFull {
@@ -88,9 +83,7 @@ func (r *RingBuffer) read(p []byte) (n int, err error) {
 
 // ReadByte reads and returns the next byte from the input or ErrIsEmpty.
 func (r *RingBuffer) ReadByte() (b byte, err error) {
-	r.mu.Lock()
 	if r.w == r.r && !r.isFull {
-		r.mu.Unlock()
 		return 0, ErrIsEmpty
 	}
 	b = r.buf[r.r]
@@ -100,7 +93,6 @@ func (r *RingBuffer) ReadByte() (b byte, err error) {
 	}
 
 	r.isFull = false
-	r.mu.Unlock()
 	return b, err
 }
 
@@ -112,9 +104,7 @@ func (r *RingBuffer) Write(p []byte) (n int, err error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
-	r.mu.Lock()
 	n, err = r.write(p)
-	r.mu.Unlock()
 
 	return n, err
 }
@@ -165,12 +155,9 @@ func (r *RingBuffer) write(p []byte) (n int, err error) {
 
 // WriteByte writes one byte into buffer, and returns ErrIsFull if buffer is full.
 func (r *RingBuffer) WriteByte(c byte) error {
-	r.mu.Lock()
 	err := r.writeByte(c)
-	r.mu.Unlock()
 	return err
 }
-
 
 func (r *RingBuffer) writeByte(c byte) error {
 	if r.w == r.r && r.isFull {
@@ -189,11 +176,12 @@ func (r *RingBuffer) writeByte(c byte) error {
 	return nil
 }
 
+func (r *RingBuffer) GetWriteSpace() int {
+	return r.Capacity() - r.Length()
+}
+
 // Length return the length of available read bytes.
 func (r *RingBuffer) Length() int {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	if r.w == r.r {
 		if r.isFull {
 			return r.size
@@ -215,9 +203,6 @@ func (r *RingBuffer) Capacity() int {
 
 // Free returns the length of available bytes to write.
 func (r *RingBuffer) Free() int {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	if r.w == r.r {
 		if r.isFull {
 			return 0
@@ -238,11 +223,78 @@ func (r *RingBuffer) WriteString(s string) (n int, err error) {
 	return r.Write(buf)
 }
 
+func (r *RingBuffer) Erase(n int) {
+	if r.r == r.w {
+		return
+	}
+
+	if r.r < r.w {
+		if r.w-r.r < n {
+			r.r = r.w
+		} else {
+			r.r += n
+		}
+	} else {
+		if n >= r.Length() {
+			r.r = r.w
+		} else {
+			if n >= r.size-r.r {
+				n -= r.size - r.r
+			}
+			r.r = n
+		}
+	}
+}
+
+func (r *RingBuffer) UnsafeBytes() []byte {
+	if r.IsEmpty() {
+		return nil
+	}
+
+	ptr := uintptr(unsafe.Pointer(&r.buf[0]))
+	ptr += uintptr(r.r)
+
+	if r.w > r.r {
+		h := [3]uintptr{ptr, uintptr(r.w - r.r), uintptr(r.w - r.r)}
+		buf := *(*[]byte)(unsafe.Pointer(&h))
+		return buf
+	} else {
+		h := [3]uintptr{ptr, uintptr(r.size - r.r), uintptr(r.size - r.r)}
+		buf := *(*[]byte)(unsafe.Pointer(&h))
+		return buf
+	}
+}
+
+func (r *RingBuffer) UnsafeWriteSpace() []byte {
+	if r.w == r.r {
+		return nil
+	}
+	ptr := uintptr(unsafe.Pointer(&r.buf[0]))
+	ptr += uintptr(r.w)
+	if (r.w > r.r) {
+		h := [3]uintptr{ptr, uintptr(r.size - r.w), uintptr(r.size - r.w)}
+		buf := *(*[]byte)(unsafe.Pointer(&h))
+		return buf
+	} else {
+		h := [3]uintptr{ptr, uintptr(r.r - r.w), uintptr(r.r - r.w)}
+		buf := *(*[]byte)(unsafe.Pointer(&h))
+		return buf
+	}
+}
+
+/*
+*重新组织内存, r调整到起始位置, 内存做相应的移动
+ */
+func (r *RingBuffer) Adjust() {
+	if r.r == r.w {
+		r.r, r.w = 0, 0
+	} else if r.r < r.w {
+		copy(r.buf[0:r.w-r.r], r.buf[r.r:r.w])
+	}
+}
+
 // Bytes returns all available read bytes. It does not move the read pointer and only copy the available data.
 func (r *RingBuffer) Bytes() []byte {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	if r.w == r.r {
 		if r.isFull {
 			buf := make([]byte, r.size)
@@ -270,34 +322,22 @@ func (r *RingBuffer) Bytes() []byte {
 		c2 := n - c1
 		copy(buf[c1:], r.buf[0:c2])
 	}
-
 	return buf
 }
 
 // IsFull returns this ringbuffer is full.
 func (r *RingBuffer) IsFull() bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	return r.isFull
 }
 
 // IsEmpty returns this ringbuffer is empty.
 func (r *RingBuffer) IsEmpty() bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	return !r.isFull && r.w == r.r
 }
 
 // Reset the read pointer and writer pointer to zero.
 func (r *RingBuffer) Reset() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	r.r = 0
 	r.w = 0
 	r.isFull = false
 }
-
-

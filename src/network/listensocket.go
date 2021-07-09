@@ -33,7 +33,7 @@ func NewListenSocket(addr string, port uint16, handler func(conn net.Conn) ()) (
 		return nil, err2
 	}
 
-	return &ListenSocket{addr: addr, port: port, listener: tcpListen, state:State_Open}, nil
+	return &ListenSocket{addr: addr, port: port, listener: tcpListen, state:SOCKET_STATE_OPEN, handler:handler}, nil
 }
 
 func (l *ListenSocket) Start() {

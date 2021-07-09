@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 var littleEnd bool = false
@@ -44,9 +43,3 @@ func GetGoid() int64 {
 	return int64(id)
 }
 
-func String2Byte(s string) []byte {
-	x := (*[2]uintptr)(unsafe.Pointer(&s))
-	h := [3]uintptr{x[0], x[1], x[1]}
-	buf := *(*[]byte)(unsafe.Pointer(&h))
-	return buf
-}

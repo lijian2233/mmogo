@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-const packetHeaderSize uint32 = 9
+const packetHeaderSize uint32 = 10
 const maxContentSize = uint32(0x01000000)
 
 var MaxSizeError = errors.New("excced max error")
@@ -30,6 +30,11 @@ type worldPacket struct {
 	contentCap uint32
 }
 
+
+func GetWorldPacketHeaderSize() uint32 {
+	return packetHeaderSize
+}
+
 func NewWorldPacket(op uint16, cap uint32) *worldPacket {
 	packet := new(worldPacket)
 	if cap >= maxContentSize {
@@ -47,6 +52,23 @@ func NewWorldPacket(op uint16, cap uint32) *worldPacket {
 	return packet
 }
 
+func ParsePacketHeader(header []byte) (seqNo, bodySize uint32, op uint16, ok bool) {
+	if header == nil || uint32(len(header)) < packetHeaderSize {
+		return 0,0, 0, false
+	}
+
+	seqNo = *(*uint32)(unsafe.Pointer(&header[0]))
+	op = *(*uint16)(unsafe.Pointer(&header[4]))
+	bodySize = *(*uint32)(unsafe.Pointer(&header[6]))
+
+	if common.IsLittleEnd(){
+		seqNo = binary.SwapUint32(seqNo)
+		op = binary.SwapUint16(op)
+		bodySize = binary.SwapUint32(bodySize)
+	}
+	return seqNo, bodySize, op,true
+}
+
 func (packet* worldPacket) getReadIndex() uint32 {
 	return packet.readIndex
 }
@@ -58,11 +80,19 @@ func (packet* worldPacket) getWriteIndex() uint32  {
 func (packet *worldPacket) Reset(op uint16) {
 	packet.readIndex = packetHeaderSize
 	packet.writeIndex = packetHeaderSize
-	*packet.op = op
+	if common.IsLittleEnd() {
+		*packet.op = binary.SwapUint16(op)
+	}else{
+		*packet.op = op
+	}
 }
 
 func (packet *worldPacket) setSeqNo(sNo uint32) {
-	*packet.seqNo = sNo
+	if common.IsLittleEnd() {
+		*packet.seqNo = binary.SwapUint32(sNo)
+	}else{
+		*packet.seqNo = sNo
+	}
 }
 
 func (packet *worldPacket) checkPacketSize(len uint32) bool {
@@ -122,7 +152,7 @@ func (packet *worldPacket) WriteString(str string) (uint32, error) {
 	}
 	packet.writeIndex += 3
 
-	b := common.String2Byte(str)
+	b := binary.String2Byte(str)
 	return packet.WriteBytes(b)
 }
 
@@ -307,10 +337,12 @@ func (packet *worldPacket) ReadUint8() uint8 {
 
 func (packet *worldPacket) ReadInt16() int16 {
 	if packet.readIndex+2 < packet.contentCap {
-		b := [2]byte{}
-		copy(b[0:], packet.content[packet.readIndex:])
+		ret := *(*int16)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 2
-		return binary.BytesToInt16(b)
+		if common.IsLittleEnd(){
+			return binary.SwapInt16(ret)
+		}
+		return ret
 	}
 	packet.readIndex = packet.contentCap
 	return 0
@@ -322,10 +354,12 @@ func (packet *worldPacket) ReadUint16() uint16 {
 
 func (packet *worldPacket) ReadInt32() int32 {
 	if packet.readIndex+4 < packet.contentCap {
-		b := [4]byte{}
-		copy(b[0:], packet.content[packet.readIndex:])
+		ret := *(*int32)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 4
-		return binary.BytesToInt32(b)
+		if common.IsLittleEnd(){
+			return binary.SwapInt32(ret)
+		}
+		return ret
 	}
 	packet.readIndex = packet.contentCap
 	return 0
@@ -337,10 +371,13 @@ func (packet *worldPacket) ReadUint32() uint32 {
 
 func (packet *worldPacket) ReadInt64() int64 {
 	if packet.readIndex+8 < packet.contentCap {
-		b := [8]byte{}
-		copy(b[0:], packet.content[packet.readIndex:])
+		ret := *(*int64)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 8
-		return binary.BytesToInt64(b)
+
+		if common.IsLittleEnd(){
+			return binary.SwapInt64(ret)
+		}
+		return ret
 	}
 	packet.readIndex = packet.contentCap
 	return 0

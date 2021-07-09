@@ -1,6 +1,11 @@
 package locker
 
-import "sync/atomic"
+import (
+	"runtime"
+	"sync/atomic"
+)
+
+var single_cpu bool = false
 
 type CASLock struct {
 	l uint32
@@ -15,13 +20,19 @@ func (cl *CASLock) Lock() {
 }
 
 func (cl *CASLock) Unlock() {
-	for{
+	for {
 		if cl.l == 0 {
 			return
 		}
 
-		if atomic.CompareAndSwapUint32(&cl.l, 1, 0){
+		if atomic.CompareAndSwapUint32(&cl.l, 1, 0) {
 			return
 		}
+	}
+}
+
+func init() {
+	if runtime.NumCPU() == 1 {
+		single_cpu = true
 	}
 }

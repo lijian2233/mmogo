@@ -10,11 +10,12 @@ type Conf struct {
 	OpayChannelMysql MySQLConfig
 	OpayStatisMysql  MySQLConfig
 	Log              struct {
-		LogPath    string //错误日志落地目录
-		LogLevel   string // debug  info  error
-		MaxSize    int    //单个日志最大容量
-		MaxAge     int    //日志最大保留天数
-		MaxBackups int    //备份最大天数
+		Path       string //错误日志落地目录
+		Level      string // debug  info  error
+		TimeFormat string //time_format
+		Color      bool
+		Terminal   bool
+		ShowIp     bool
 	}
 
 	Server struct {

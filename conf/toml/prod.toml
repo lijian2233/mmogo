@@ -15,8 +15,9 @@
     maxIdleConns=1
 
 [log]
-    logPath="/data/logs/channel.log"
-    logLevel="debug"
-    maxSize=500
-    maxAge=30
-    MaxBackups=7
+    dir          = "./logs"
+    level        = "debug"
+    time_format  = "2006-01-02 15:04:05.000"
+    color        = true
+    terminal     = false
+    show_ip      = false

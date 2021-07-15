@@ -1,0 +1,5 @@
+[35m[WARN][0m (10.249.203.125) 2021-07-15 16:11:10 [34m<network/listensocket.go:55>[0m listen socket :8080 exit
+[31m[ERRO][0m (10.249.203.125) 2021-07-15 16:47:44 [34m<network/listensocket.go:44>[0m listen socket :8080 start error:not open state
+[31m[ERRO][0m (10.249.203.125) 2021-07-15 16:48:11 [34m<network/listensocket.go:44>[0m listen socket :8080 start error:not open state
+[31m[ERRO][0m (10.249.203.125) 2021-07-15 16:49:29 [34m<network/listensocket.go:44>[0m listen socket :8080 start error:not open state
+[31m[ERRO][0m (10.249.203.125) 2021-07-15 16:51:16 [34m<network/listensocket.go:44>[0m listen socket :8080 start error:not open state

@@ -172,7 +172,11 @@ func (r *RingBuffer) WriteByte(c byte) error {
 
 func (r *RingBuffer) IncWriteIndex(inc int) {
 	r.w = (r.w + inc) % r.size
+	if r.r == r.w {
+		r.isFull = true
+	}
 }
+
 
 func (r *RingBuffer) writeByte(c byte) error {
 	if r.w == r.r && r.isFull {
@@ -238,33 +242,12 @@ func (r *RingBuffer) WriteString(s string) (n int, err error) {
 
 func (r *RingBuffer) Erase(n int) {
 	r.lock.Lock()
-	if r.r == r.w && !r.isFull {
-		return
-	}
-
-	if r.r == r.w {
-		if n >= r.size{
-			r.r, r.w = 0, 0
-			r.isFull = false
-			return
-		}
-	}
-
-	if r.r < r.w {
-		if r.w-r.r < n {
-			r.r = r.w
-		} else {
-			r.r += n
-		}
-	} else {
-		if n >= r.Length() {
-			r.r = r.w
-		} else {
-			if n >= r.size-r.r {
-				n -= r.size - r.r
-			}
-			r.r = n
-		}
+	if r.Length() <= n {
+		r.r = r.w
+		r.isFull = false
+	}else{
+		r.r = (r.r + n) % r.size
+		r.isFull = false
 	}
 	r.lock.Unlock()
 

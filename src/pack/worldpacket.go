@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mmogo/common"
 	"mmogo/common/binaryop"
+	"mmogo/gameInterface"
 	"unsafe"
 )
 
@@ -35,8 +36,72 @@ type WorldPacket struct {
 	contentCap uint32
 }
 
-func GetWorldPacketHeaderSize() uint32 {
+func (packet* WorldPacket) BodySize() uint32 {
+	return packet.writeIndex - packet.GetSize()
+}
+
+func (packet* WorldPacket) HeaderSize() uint32  {
 	return packetHeaderSize
+}
+
+func (packet* WorldPacket) GetBody(safe ...interface{}) []byte {
+	bSafe := true
+	if len(safe) > 0 {
+		v, ok := safe[0].(bool)
+		if ok {
+			bSafe = v
+		}
+	}
+	if packet.BodySize() == 0 {
+		return nil
+	}
+
+	if bSafe {
+		body := make([]byte, packet.BodySize(), packet.BodySize())
+		copy(body, packet.content[packet.HeaderSize():])
+		return body
+	}else{
+		h := [3]uintptr{uintptr(unsafe.Pointer(&packet.content[packetHeaderSize])), uintptr(packet.BodySize()), uintptr(packet.BodySize())}
+		return *(*[]byte)(unsafe.Pointer(&h))
+	}
+}
+
+func (packet* WorldPacket) GetHeader(safe ...interface{}) []byte  {
+	bSafe := true
+	if len(safe) > 0 {
+		v, ok := safe[0].(bool)
+		if ok {
+			bSafe = v
+		}
+	}
+
+	if bSafe {
+		header := make([]byte, packet.HeaderSize(), packet.HeaderSize())
+		copy(header, packet.content[0:packet.HeaderSize()])
+		return header
+	}else{
+		h := [3]uintptr{uintptr(unsafe.Pointer(&packet.content[0])), uintptr(packet.HeaderSize()), uintptr(packet.HeaderSize())}
+		return *(*[]byte)(unsafe.Pointer(&h))
+	}
+}
+
+func (packet* WorldPacket) GetPacket(safe ...interface{}) []byte  {
+	bSafe := true
+	if len(safe) > 0 {
+		v, ok := safe[0].(bool)
+		if ok {
+			bSafe = v
+		}
+	}
+
+	if bSafe {
+		full := make([]byte, packet.writeIndex, packet.writeIndex)
+		copy(full, packet.content[0:packet.writeIndex])
+		return full
+	}else{
+		h := [3]uintptr{uintptr(unsafe.Pointer(&packet.content[0])), uintptr(packet.writeIndex), uintptr(packet.writeIndex)}
+		return *(*[]byte)(unsafe.Pointer(&h))
+	}
 }
 
 func NewWorldPacket(op uint16, cap uint32) *WorldPacket {
@@ -58,49 +123,58 @@ func NewWorldPacket(op uint16, cap uint32) *WorldPacket {
 	return packet
 }
 
-func BuildWorldPacket(bytes []byte, reuseBuf bool) (*WorldPacket, error) {
-	_, bodySize, op, ok := ParsePacketHeader(bytes)
+func (packet* WorldPacket) PacketSize() uint32 {
+	return packet.GetSize()
+}
+
+func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (gameInterface.BinaryPacket, error){
+	packetSize, ok := packet.ParsePacketHeader(bytes)
 	if !ok {
 		return nil, BuildPacketError
 	}
 
-	if uint32(len(bytes)) < bodySize {
+	if uint32(len(bytes)) < packetSize {
 		return nil, BuildPacketError
 	}
 
-	var packet *WorldPacket
 	if reuseBuf {
 		packet = new(WorldPacket)
 		packet.content = bytes
+		packet.readIndex = packetHeaderSize
 		packet.writeIndex = uint32(len(bytes))
 		packet.contentCap = packet.writeIndex
-		packet.SetSize(packet.writeIndex)
 		packet.seqNo = (*uint32)(unsafe.Pointer(&packet.content[seqOffset]))
-		packet.SetOp(op)
-	} else {
-		packet = NewWorldPacket(op, bodySize-packetHeaderSize)
-		copy(packet.content, bytes[0:bodySize])
+		packet.op = (*uint16)(unsafe.Pointer(unsafe.Pointer(&packet.content[opOffset])))
+		packet.size = (*uint32)(unsafe.Pointer(unsafe.Pointer(&packet.content[sizeOffset])))
+		packet.SetSize(packet.writeIndex)
+		return packet, nil
+	}else{
+		packet = new(WorldPacket)
+		packet.content = make([]byte, packetSize, packetSize)
+		copy(packet.content, bytes[0:packetSize])
 		packet.readIndex = packetHeaderSize
-		packet.writeIndex = bodySize
+		packet.writeIndex = packetSize
+		packet.contentCap = packet.writeIndex
+		packet.seqNo = (*uint32)(unsafe.Pointer(&packet.content[seqOffset]))
+		packet.op = (*uint16)(unsafe.Pointer(unsafe.Pointer(&packet.content[opOffset])))
+		packet.size = (*uint32)(unsafe.Pointer(unsafe.Pointer(&packet.content[sizeOffset])))
+		packet.SetSize(packet.writeIndex)
+		return packet, nil
 	}
-	return packet, nil
 }
 
-func ParsePacketHeader(header []byte) (seqNo, bodySize uint32, op uint16, ok bool) {
+
+func (packet *WorldPacket) ParsePacketHeader(header []byte) (uint32, bool) {
 	if header == nil || uint32(len(header)) < packetHeaderSize {
-		return 0, 0, 0, false
+		return 0, false
 	}
 
-	seqNo = *(*uint32)(unsafe.Pointer(&header[seqOffset]))
-	op = *(*uint16)(unsafe.Pointer(&header[opOffset]))
-	bodySize = *(*uint32)(unsafe.Pointer(&header[sizeOffset]))
 
+	size := *(*uint32)(unsafe.Pointer(&header[sizeOffset]))
 	if common.IsLittleEnd() {
-		seqNo = binaryop.SwapUint32(seqNo)
-		op = binaryop.SwapUint16(op)
-		bodySize = binaryop.SwapUint32(bodySize)
+		size = binaryop.SwapUint32(size)
 	}
-	return seqNo, bodySize, op, true
+	return size, true
 }
 
 func (packet *WorldPacket) GetReadIndex() uint32 {

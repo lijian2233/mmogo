@@ -6,7 +6,7 @@ import (
 	linklist "github.com/emirpasic/gods/lists/singlylinkedlist"
 	"mmogo/buffer"
 	"mmogo/common/locker"
-	"mmogo/common/logger"
+	"mmogo/gameInterface"
 	"mmogo/pack"
 	"net"
 	"runtime/debug"
@@ -17,6 +17,10 @@ import (
 )
 
 type TcpSocket struct {
+	connTimeOut int
+	sendTimeOut int
+	recvTimeOut int
+
 	conn  net.Conn
 	state uint32
 
@@ -30,8 +34,10 @@ type TcpSocket struct {
 	sendBuf  *buffer.RingBuffer
 	sendCond *sync.Cond
 
-	//当发送缓冲区已满, 新发送的数据挂接到此列表
-	sendBuffList *linklist.List
+	//双写缓冲,避免阻塞发送携程
+	sendBuffList  *linklist.List
+	sendBuffList1 *linklist.List
+	sendBuffList2 *linklist.List
 
 	//接受缓冲区
 	recvLock locker.CASLock
@@ -43,13 +49,12 @@ type TcpSocket struct {
 	hasCloseSend bool
 	hasCloseRecv bool
 
-	remainBytes uint32
-
 	//socket lock
 	socketLock locker.CASLock
+	packetType gameInterface.BinaryPacket
 
-	handler func(*pack.WorldPacket)
-	log     *logger.Logger
+	handleBinaryPacket func(gameInterface.BinaryPacket)
+	log                gameInterface.Log
 }
 
 const max_buff_size = 0x400000 //4M
@@ -60,52 +65,145 @@ var Err_Conn_Is_Nil = errors.New("conn is nil")
 var Err_Handler_Packet_Fn = errors.New("handler packet func must not nil")
 var Err_Send_Packet_Is_Nil = errors.New("send ni packet")
 
-func NewTcpSocket(addr string, port uint16, sendBuffSize, recvBuffSize uint32, handler func(*pack.WorldPacket)) (*TcpSocket, error) {
-	if sendBuffSize > max_buff_size || recvBuffSize > max_buff_size {
-		return nil, Err_Max_Buff_Size
-	}
+type Opt func(socket *TcpSocket)
 
-	if handler == nil {
-		return nil, Err_Handler_Packet_Fn
+func WithLog(log gameInterface.Log) Opt {
+	return func(socket *TcpSocket) {
+		socket.log = log
 	}
+}
 
-	socket := &TcpSocket{state: SOCKET_STATE_CREATE}
-	socket.peerAddr = fmt.Sprintf("%s:%d", addr, port)
-	socket.sendBuf = buffer.NewRingBuffer(int(sendBuffSize))
-	socket.recvBuf = buffer.NewRingBuffer(int(recvBuffSize))
+func WithHandlePacket(h func(packet gameInterface.BinaryPacket)) Opt {
+	return func(socket *TcpSocket) {
+		socket.handleBinaryPacket = h
+	}
+}
+
+func WithSendBuffSize(size int) Opt {
+	return func(socket *TcpSocket) {
+		if size > max_buff_size {
+			size = max_buff_size
+		}
+		socket.sendBuf = buffer.NewRingBuffer(size)
+	}
+}
+
+func WithRecivBuffSize(size int) Opt {
+	return func(socket *TcpSocket) {
+		if size > max_buff_size {
+			size = max_buff_size
+		}
+
+		socket.recvBuf = buffer.NewRingBuffer(size)
+	}
+}
+
+func WithConnectTimeOut(timeOut int) Opt {
+	return func(socket *TcpSocket) {
+		if timeOut > 0 {
+			socket.connTimeOut = timeOut
+		}
+	}
+}
+
+func WithSendTimeOut(timeOut int) Opt {
+	return func(socket *TcpSocket) {
+		if timeOut > 0 {
+			socket.sendTimeOut = timeOut
+		}
+	}
+}
+
+func WithRecvTimeOut(timeOut int) Opt {
+	return func(socket *TcpSocket) {
+		if timeOut > 0 {
+			socket.recvTimeOut = timeOut
+		}
+	}
+}
+
+func WithBinaryPacket(packet gameInterface.BinaryPacket) Opt {
+	return func(socket *TcpSocket) {
+		socket.packetType = packet
+	}
+}
+
+func (socket *TcpSocket) initBuffer() {
 	socket.sendCond = sync.NewCond(&sync.Mutex{})
-	socket.sendBuffList = linklist.New()
-	socket.handler = handler
+	socket.sendBuffList1 = linklist.New()
+	socket.sendBuffList2 = linklist.New()
+	socket.sendBuffList = socket.sendBuffList1
+	if socket.sendBuf == nil {
+		socket.sendBuf = buffer.NewRingBuffer(64 * 1024)
+	}
+
+	if socket.recvBuf == nil {
+		socket.recvBuf = buffer.NewRingBuffer(64 * 1024)
+	}
+}
+
+func NewTcpSocket(addr string, port uint16, opts ...Opt) (*TcpSocket, error) {
+	socket := &TcpSocket{state: SOCKET_STATE_CREATE}
+	for _, fn := range (opts) {
+		fn(socket)
+	}
+
+	socket.peerAddr = fmt.Sprintf("%s:%d", addr, port)
+
+	var err error
+	if socket.connTimeOut == 0 {
+		socket.conn, err = net.Dial("tcp", socket.peerAddr)
+	} else {
+		socket.conn, err = net.DialTimeout("tcp", socket.peerAddr, time.Duration(socket.connTimeOut))
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	socket.initBuffer()
+
+	if socket.packetType == nil {
+		socket.packetType = &pack.WorldPacket{}
+	}
+	socket.exitSendChan = make(chan bool, 1)
+	socket.exitRecvChan = make(chan bool, 1)
+	go socket.sendSocketData()
+	go socket.recvMsg()
 	return socket, nil
 }
 
-func NewConnSocket(conn net.Conn, sendBuffSize, recvBuffSize uint32, handler func(*pack.WorldPacket), log *logger.Logger) (*TcpSocket, error) {
-	if sendBuffSize > max_buff_size || recvBuffSize > max_buff_size {
-		return nil, Err_Max_Buff_Size
+func (socket *TcpSocket) SetHandler(fn func(packet gameInterface.BinaryPacket)) {
+	socket.handleBinaryPacket = fn
+}
+
+func (socket *TcpSocket) SetLog(log gameInterface.Log) {
+	socket.log = log
+}
+
+func NewConnSocket(conn net.Conn, opts ...Opt) (*TcpSocket, error) {
+	if conn == nil {
+		return nil, Err_Conn_Is_Nil
+	}
+
+	socket := &TcpSocket{state: SOCKET_STATE_OPEN}
+	for _, fn := range (opts) {
+		fn(socket)
 	}
 
 	if conn == nil {
 		return nil, Err_Conn_Is_Nil
 	}
 
-	if handler == nil {
-		return nil, Err_Handler_Packet_Fn
-	}
-
-	socket := &TcpSocket{state: SOCKET_STATE_OPEN}
 	socket.localAddr = conn.LocalAddr().String()
 	socket.peerAddr = conn.RemoteAddr().String()
-
-	socket.sendBuf = buffer.NewRingBuffer(int(sendBuffSize))
-	socket.recvBuf = buffer.NewRingBuffer(int(recvBuffSize))
-	socket.sendCond = sync.NewCond(&sync.Mutex{})
-	socket.sendBuffList = linklist.New()
-	socket.handler = handler
 	socket.conn = conn
-
+	socket.initBuffer()
 	socket.exitSendChan = make(chan bool, 1)
 	socket.exitRecvChan = make(chan bool, 1)
-	socket.log = log
+
+	if socket.packetType == nil {
+		socket.packetType = &pack.WorldPacket{}
+	}
 
 	go socket.sendSocketData()
 	go socket.recvMsg()
@@ -113,11 +211,8 @@ func NewConnSocket(conn net.Conn, sendBuffSize, recvBuffSize uint32, handler fun
 	return socket, nil
 }
 
-func (socket *TcpSocket) SetLog(log *logger.Logger) {
-	socket.log = log
-}
-
 func (socket *TcpSocket) sendSocketData() {
+	time.Sleep(time.Second * 2)
 	for {
 		if atomic.LoadUint32(&socket.state) == SOCKET_STATE_CLOSE {
 			socket.exitSendChan <- true
@@ -135,43 +230,48 @@ func (socket *TcpSocket) sendSocketData() {
 		if socket.log != nil {
 			socket.log.Infof("socket %v handle send data :%v", unsafe.Pointer(socket), socket.sendBuffList.Size())
 		}
-		for {
-			if !socket.sendBuffList.Empty() {
-				d, _ := socket.sendBuffList.Get(0)
-				packet, _ := d.(*pack.WorldPacket)
-				if int(packet.GetSize()) <= socket.sendBuf.Free() {
-					socket.sendBuf.Write(packet.GetContent())
-					socket.sendBuffList.Remove(0)
-				}else{
-					if socket.sendBuf.IsEmpty(){
-						socket.sendBuffList.Remove(0)
-						socket.sendCond.L.Unlock()
-						_, err := socket.conn.Write(packet.GetContent())
-						if err != nil && socket.log != nil {
-							socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
-						}
-					}else{
-						socket.sendCond.L.Unlock()
-						_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
-						if err != nil && socket.log != nil {
-							socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
-						}
-						socket.sendBuf.Adjust()
+
+		buffList := socket.sendBuffList
+		if socket.sendBuffList == socket.sendBuffList1 {
+			socket.sendBuffList = socket.sendBuffList2
+		} else {
+			socket.sendBuffList = socket.sendBuffList1
+		}
+		socket.sendCond.L.Unlock()
+
+		totalPacketSize := 0
+		for ; !buffList.Empty(); {
+			d, _ := buffList.Get(0)
+			packet, _ := d.(gameInterface.BinaryPacket)
+			totalPacketSize += int(packet.PacketSize())
+			if int(packet.PacketSize()) <= socket.sendBuf.Free() {
+				//优先写到缓冲区
+				socket.sendBuf.Write(packet.GetPacket(false))
+				buffList.Remove(0)
+			} else {
+				if socket.sendBuf.IsEmpty() {
+					buffList.Remove(0)
+					//直接发送packet
+					_, err := socket.conn.Write(packet.GetPacket(false))
+					if err != nil && socket.log != nil {
+						socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
 					}
-					//回到主循环,主要用于判断socket退出
-					break
-				}
-			}else{
-				socket.sendCond.L.Unlock()
-				if !socket.sendBuf.IsEmpty(){
+				} else {
 					_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
 					if err != nil && socket.log != nil {
 						socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
 					}
 					socket.sendBuf.Reset()
 				}
-				break
 			}
+		}
+		if !socket.sendBuf.IsEmpty(){
+			//直接发送packet
+			_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
+			if err != nil && socket.log != nil {
+				socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
+			}
+			socket.sendBuf.Reset()
 		}
 	}
 }
@@ -246,7 +346,7 @@ func (socket *TcpSocket) Connect(timeout time.Duration) error {
 	return Err_Conncet_Unknown
 }
 
-func (socket *TcpSocket) SendPacket(packet *pack.WorldPacket) error {
+func (socket *TcpSocket) SendPacket(packet gameInterface.BinaryPacket) error {
 	if !socket.IsOpen() {
 		return Err_Socket_Not_Open
 	}
@@ -283,11 +383,13 @@ func (socket *TcpSocket) recvMsg() {
 			socket.Close()
 			return
 		}
-		if uint32(len(bytes)) < pack.GetWorldPacketHeaderSize() {
-			if socket.recvBuf.Free() > int(pack.GetWorldPacketHeaderSize()) {
+
+		headerSize := int(socket.packetType.HeaderSize())
+		if len(bytes) < headerSize {
+			if socket.recvBuf.Free() > headerSize {
 				socket.recvBuf.Adjust()
 				bytes = socket.recvBuf.UnsafeWriteSpace()
-				if len(bytes) < int(pack.GetWorldPacketHeaderSize()) {
+				if len(bytes) < headerSize {
 					socket.Close()
 					return
 				}
@@ -306,41 +408,39 @@ func (socket *TcpSocket) recvMsg() {
 		socket.recvBuf.IncWriteIndex(n)
 
 		for {
-			if socket.recvBuf.Length() < int(pack.GetWorldPacketHeaderSize()) {
+			if socket.recvBuf.Length() < headerSize {
 				break
 			}
 
 			rbuf := socket.recvBuf.UnsafeReadBytes()
-			_, bodySize, op, ok := pack.ParsePacketHeader(rbuf)
+			packetSize, ok := socket.packetType.ParsePacketHeader(rbuf)
 			if ok {
-				if socket.recvBuf.Length() >= int(bodySize) {
-					if len(rbuf) >= int(bodySize) {
+				if socket.recvBuf.Length() >= int(packetSize) {
+					if len(rbuf) >= int(packetSize) {
 						//full packet
-						packet, _ := pack.BuildWorldPacket(rbuf, false)
-						socket.recvBuf.Erase(int(bodySize))
-						socket.handler(packet)
+						packet, _ := socket.packetType.BuildPacket(rbuf, false)
+						socket.recvBuf.Erase(int(packetSize))
+						socket.handleBinaryPacket(packet)
 					} else {
-						worldPack := pack.NewWorldPacket(op, bodySize)
-						contentPtr := uintptr(unsafe.Pointer(&rbuf[0])) + uintptr(pack.GetWorldPacketHeaderSize())
-						h := [3]uintptr{contentPtr, uintptr(uint32(len(rbuf)) - pack.GetWorldPacketHeaderSize()),
-							uintptr(uint32(len(rbuf)) - pack.GetWorldPacketHeaderSize())}
-						buf := *(*[]byte)(unsafe.Pointer(&h))
-						worldPack.WriteBytes(buf, len(buf))
-
+						buf := make([]byte, packetSize, packetSize)
+						copy(buf, rbuf)
+						wlen := len(rbuf)
 						socket.recvBuf.Erase(len(rbuf))
-						left := int(bodySize) - len(rbuf)
+						left := int(packetSize) - len(rbuf)
 						rbuf = socket.recvBuf.UnsafeReadBytes()
 						if len(rbuf) < left {
 							panic("recv buf")
 						}
-						worldPack.WriteBytes(rbuf, left)
+						copy(buf[wlen:], rbuf)
 						socket.recvBuf.Erase(left)
+						packet, _ := socket.packetType.BuildPacket(rbuf, true)
+						socket.handleBinaryPacket(packet)
 					}
-				}else{
+				} else {
 					break
 				}
-			}else{
-				if socket.log != nil{
+			} else {
+				if socket.log != nil {
 					socket.log.Info("socket remote addr %v recv error format packet, will close", socket.peerAddr)
 				}
 				break

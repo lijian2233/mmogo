@@ -20,6 +20,7 @@ type ListenSocket struct {
 	handler  func(conn net.Conn) ()
 }
 
+
 func NewListenSocket(addr string, port uint16, log logger.Logger, handler func(conn net.Conn) ()) (*ListenSocket, error) {
 	if handler == nil {
 		return nil, Handle_Not_Set_Err

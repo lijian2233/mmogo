@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"mmogo/common/logger"
+	"mmogo/gameInterface"
 	"mmogo/pack"
 	"net"
 	"sync"
@@ -51,10 +52,17 @@ func parsePacket(packet *pack.WorldPacket) {
 }
 
 func handleAccept(conn net.Conn) {
-	 NewConnSocket(conn, 512, 256, func(packet *pack.WorldPacket) {
-		fmt.Println(packet.GetOpcode(), packet.GetSize())
-		parsePacket(packet)
-	}, log)
+	 NewConnSocket(conn,
+	 	WithSendBuffSize(256),
+	 	WithRecivBuffSize(512),
+	 	WithLog(log),
+	 	WithHandlePacket(func(packet gameInterface.BinaryPacket) {
+	 		p , ok := packet.(*pack.WorldPacket)
+	 		if ok {
+	 			parsePacket(p)
+			}
+		}),
+	)
 
 }
 
@@ -120,15 +128,12 @@ func TestClient(t *testing.T) {
 		return
 	}
 
-	cli, err := NewConnSocket(c, 10*1024, 10*1024, func(packet *pack.WorldPacket) {
-
-	}, log)
-
+	cli, err := NewConnSocket(c)
 	if err != nil {
 		fmt.Println("TestClient err ", err)
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 8; i++ {
 		p1 := pack.NewWorldPacket(201, 100)
 		p1.WriteNum(uint32(1))
 		p1.WriteNum(uint32(2))

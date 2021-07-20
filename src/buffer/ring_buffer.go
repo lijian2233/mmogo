@@ -251,7 +251,7 @@ func (r *RingBuffer) Erase(n int) {
 	}
 	r.lock.Unlock()
 
-	if r.w > r.size/2 || r.r == r.w {
+	if r.Length() > r.size/3 {
 		r.Adjust()
 	}
 }
@@ -322,6 +322,17 @@ func (r *RingBuffer) Adjust() {
 		len := r.w - r.r
 		r.r = 0
 		r.w = len
+	}else{
+		if r.r - r.w >= r.size - r.r {
+			//反向copy,避免内存覆盖
+			l := r.size - r.r
+			for i:=0; i< r.w; i++{
+				r.buf[r.w + l - 1 -i] = r.buf[r.w - 1 - i]
+			}
+			copy(r.buf[0:], r.buf[r.r:r.size])
+			r.w = r.w + l
+			r.r = 0
+		}
 	}
 }
 

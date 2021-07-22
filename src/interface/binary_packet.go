@@ -1,4 +1,4 @@
-package gameInterface
+package _interface
 
 type BinaryPacket interface {
 	//safe ...interface{} first param must bool, false, unsafe, true safe, default safe

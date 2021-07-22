@@ -3,7 +3,7 @@ package binaryop
 import (
 	"bytes"
 	eb "encoding/binary"
-	"mmogo/common"
+	"mmogo/lib/common"
 	"unsafe"
 )
 

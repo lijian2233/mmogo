@@ -3,7 +3,7 @@ package network
 import (
 	"errors"
 	"fmt"
-	"mmogo/common/logger"
+	"mmogo/lib/logger"
 	"net"
 	"sync/atomic"
 )

@@ -1,11 +1,11 @@
-package pack
+package packet
 
 import (
 	"errors"
 	"fmt"
-	"mmogo/common"
-	"mmogo/common/binaryop"
-	"mmogo/gameInterface"
+	"mmogo/interface"
+	"mmogo/lib/binaryop"
+	"mmogo/lib/common"
 	"unsafe"
 )
 
@@ -127,7 +127,7 @@ func (packet* WorldPacket) PacketSize() uint32 {
 	return packet.GetSize()
 }
 
-func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (gameInterface.BinaryPacket, error){
+func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (_interface.BinaryPacket, error){
 	packetSize, ok := packet.ParsePacketHeader(bytes)
 	if !ok {
 		return nil, BuildPacketError

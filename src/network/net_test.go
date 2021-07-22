@@ -2,9 +2,9 @@ package network
 
 import (
 	"fmt"
-	"mmogo/common/logger"
-	"mmogo/gameInterface"
-	"mmogo/pack"
+	"mmogo/interface"
+	"mmogo/lib/logger"
+	"mmogo/lib/packet"
 	"net"
 	"sync"
 	"testing"
@@ -19,7 +19,7 @@ func init() {
 
 var tt *testing.T
 
-func parsePacket(packet *pack.WorldPacket) {
+func parsePacket(packet *packet.WorldPacket) {
 	switch packet.GetOpcode() {
 	case 201:
 		{
@@ -56,8 +56,8 @@ func handleAccept(conn net.Conn) {
 	 	WithSendBuffSize(256),
 	 	WithRecivBuffSize(512),
 	 	WithLog(log),
-	 	WithHandlePacket(func(packet gameInterface.BinaryPacket) {
-	 		p , ok := packet.(*pack.WorldPacket)
+	 	WithHandlePacket(func(pack _interface.BinaryPacket) {
+	 		p , ok := pack.(*packet.WorldPacket)
 	 		if ok {
 	 			parsePacket(p)
 			}
@@ -134,18 +134,18 @@ func TestClient(t *testing.T) {
 	}
 
 	for i := 0; i < 8; i++ {
-		p1 := pack.NewWorldPacket(201, 100)
+		p1 := packet.NewWorldPacket(201, 100)
 		p1.WriteNum(uint32(1))
 		p1.WriteNum(uint32(2))
 		cli.SendPacket(p1)
 
-		p2 := pack.NewWorldPacket(202, 100)
+		p2 := packet.NewWorldPacket(202, 100)
 		p2.WriteNum(uint32(3))
 		p2.WriteString("lijian")
 		p2.WriteNum(uint32(4))
 		cli.SendPacket(p2)
 
-		p3 := pack.NewWorldPacket(203, 100)
+		p3 := packet.NewWorldPacket(203, 100)
 		p3.WriteNum(uint32(5))
 		p3.WriteString("lijian")
 		p3.WriteNum(uint32(6))

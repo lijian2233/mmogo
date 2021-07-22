@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	linklist "github.com/emirpasic/gods/lists/singlylinkedlist"
-	"mmogo/buffer"
-	"mmogo/common/locker"
-	"mmogo/gameInterface"
-	"mmogo/pack"
+	"mmogo/interface"
+	"mmogo/lib/buffer"
+	"mmogo/lib/locker"
+	"mmogo/lib/packet"
 	"net"
 	"runtime/debug"
 	"sync"
@@ -51,10 +51,10 @@ type TcpSocket struct {
 
 	//socket lock
 	socketLock locker.CASLock
-	packetType gameInterface.BinaryPacket
+	packetType _interface.BinaryPacket
 
-	handleBinaryPacket func(gameInterface.BinaryPacket)
-	log                gameInterface.Log
+	handleBinaryPacket func(_interface.BinaryPacket)
+	log                _interface.Log
 }
 
 const max_buff_size = 0x400000 //4M
@@ -67,13 +67,13 @@ var Err_Send_Packet_Is_Nil = errors.New("send ni packet")
 
 type Opt func(socket *TcpSocket)
 
-func WithLog(log gameInterface.Log) Opt {
+func WithLog(log _interface.Log) Opt {
 	return func(socket *TcpSocket) {
 		socket.log = log
 	}
 }
 
-func WithHandlePacket(h func(packet gameInterface.BinaryPacket)) Opt {
+func WithHandlePacket(h func(packet _interface.BinaryPacket)) Opt {
 	return func(socket *TcpSocket) {
 		socket.handleBinaryPacket = h
 	}
@@ -122,7 +122,7 @@ func WithRecvTimeOut(timeOut int) Opt {
 	}
 }
 
-func WithBinaryPacket(packet gameInterface.BinaryPacket) Opt {
+func WithBinaryPacket(packet _interface.BinaryPacket) Opt {
 	return func(socket *TcpSocket) {
 		socket.packetType = packet
 	}
@@ -163,7 +163,7 @@ func NewTcpSocket(addr string, port uint16, opts ...Opt) (*TcpSocket, error) {
 	socket.initBuffer()
 
 	if socket.packetType == nil {
-		socket.packetType = &pack.WorldPacket{}
+		socket.packetType = &packet.WorldPacket{}
 	}
 	socket.exitSendChan = make(chan bool, 1)
 	socket.exitRecvChan = make(chan bool, 1)
@@ -172,11 +172,11 @@ func NewTcpSocket(addr string, port uint16, opts ...Opt) (*TcpSocket, error) {
 	return socket, nil
 }
 
-func (socket *TcpSocket) SetHandler(fn func(packet gameInterface.BinaryPacket)) {
+func (socket *TcpSocket) SetHandler(fn func(packet _interface.BinaryPacket)) {
 	socket.handleBinaryPacket = fn
 }
 
-func (socket *TcpSocket) SetLog(log gameInterface.Log) {
+func (socket *TcpSocket) SetLog(log _interface.Log) {
 	socket.log = log
 }
 
@@ -202,7 +202,7 @@ func NewConnSocket(conn net.Conn, opts ...Opt) (*TcpSocket, error) {
 	socket.exitRecvChan = make(chan bool, 1)
 
 	if socket.packetType == nil {
-		socket.packetType = &pack.WorldPacket{}
+		socket.packetType = &packet.WorldPacket{}
 	}
 
 	go socket.sendSocketData()
@@ -242,7 +242,7 @@ func (socket *TcpSocket) sendSocketData() {
 		totalPacketSize := 0
 		for ; !buffList.Empty(); {
 			d, _ := buffList.Get(0)
-			packet, _ := d.(gameInterface.BinaryPacket)
+			packet, _ := d.(_interface.BinaryPacket)
 			totalPacketSize += int(packet.PacketSize())
 			if int(packet.PacketSize()) <= socket.sendBuf.Free() {
 				//优先写到缓冲区
@@ -346,7 +346,7 @@ func (socket *TcpSocket) Connect(timeout time.Duration) error {
 	return Err_Conncet_Unknown
 }
 
-func (socket *TcpSocket) SendPacket(packet gameInterface.BinaryPacket) error {
+func (socket *TcpSocket) SendPacket(packet _interface.BinaryPacket) error {
 	if !socket.IsOpen() {
 		return Err_Socket_Not_Open
 	}

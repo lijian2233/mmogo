@@ -3,14 +3,14 @@ package timer
 import (
 	"github.com/emirpasic/gods/sets/treeset"
 	rbt "github.com/emirpasic/gods/trees/redblacktree"
-	"mmogo/common/locker"
+	"mmogo/lib"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 type asyncTimer struct {
-	casLock            locker.CASLock
+	casLock            CASLock
 	cond               *sync.Cond
 	nextTimerId        uint64
 	state              uint32
@@ -102,9 +102,9 @@ func (timer *asyncTimer) Start() error {
 		func() {
 			if !atomic.CompareAndSwapUint32(&timer.state, State_Init, State_Running) {
 				if timer.state == State_Running {
-					err =  Err_Start_Timer_Is_Running
+					err = Err_Start_Timer_Is_Running
 				}
-				err =  Err_Start_Timer_Is_Exiting
+				err = Err_Start_Timer_Is_Exiting
 				return
 			}
 

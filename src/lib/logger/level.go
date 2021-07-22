@@ -83,4 +83,3 @@ func GetLevelText(level Level, enableColor bool) string {
 
 	return ""
 }
-

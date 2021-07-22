@@ -1,4 +1,4 @@
-package locker
+package _interface
 
 type Locker interface {
 	Lock()

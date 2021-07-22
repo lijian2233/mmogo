@@ -2,8 +2,8 @@ package buffer
 
 import (
 	"errors"
-	"mmogo/common/binaryop"
-	"mmogo/common/locker"
+	"mmogo/lib/binaryop"
+	"mmogo/lib/locker"
 	"unsafe"
 )
 

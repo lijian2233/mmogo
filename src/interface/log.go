@@ -1,4 +1,4 @@
-package gameInterface
+package _interface
 
 
 type Log interface {

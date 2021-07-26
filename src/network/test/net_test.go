@@ -1,10 +1,12 @@
-package network
+package test
 
 import (
 	"fmt"
 	"mmogo/interface"
 	"mmogo/lib/logger"
 	"mmogo/lib/packet"
+	"mmogo/network/listen"
+	"mmogo/network/socket"
 	"net"
 	"sync"
 	"testing"
@@ -52,11 +54,11 @@ func parsePacket(packet *packet.WorldPacket) {
 }
 
 func handleAccept(conn net.Conn) {
-	 NewConnSocket(conn,
-	 	WithSendBuffSize(256),
-	 	WithRecivBuffSize(512),
-	 	WithLog(log),
-	 	WithHandlePacket(func(pack _interface.BinaryPacket) {
+	 socket.NewConnSocket(conn,
+	 	socket.WithSendBuffSize(256),
+	 	socket.WithRecivBuffSize(512),
+	 	socket.WithLog(log),
+	 	socket.WithHandlePacket(func(pack _interface.BinaryPacket) {
 	 		p , ok := pack.(*packet.WorldPacket)
 	 		if ok {
 	 			parsePacket(p)
@@ -75,7 +77,9 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewListenSocket(t *testing.T) {
-	l, err := NewListenSocket("127.0.0.1", 8080, *log, handleAccept)
+	l, err := listen.NewListenSocket("127.0.0.1", 8080,
+		listen.WithLog(log), listen.WithHandler(handleAccept))
+
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -128,12 +132,12 @@ func TestClient(t *testing.T) {
 		return
 	}
 
-	cli, err := NewConnSocket(c)
+	cli, err := socket.NewConnSocket(c)
 	if err != nil {
 		fmt.Println("TestClient err ", err)
 	}
 
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 100; i++ {
 		p1 := packet.NewWorldPacket(201, 100)
 		p1.WriteNum(uint32(1))
 		p1.WriteNum(uint32(2))

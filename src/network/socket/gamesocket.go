@@ -1,4 +1,4 @@
-package network
+package socket
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	"mmogo/lib/buffer"
 	"mmogo/lib/locker"
 	"mmogo/lib/packet"
+	"mmogo/network"
 	"net"
 	"runtime/debug"
 	"sync"
@@ -65,21 +66,21 @@ var Err_Conn_Is_Nil = errors.New("conn is nil")
 var Err_Handler_Packet_Fn = errors.New("handler packet func must not nil")
 var Err_Send_Packet_Is_Nil = errors.New("send ni packet")
 
-type Opt func(socket *TcpSocket)
+type GameSocketOpt func(socket *TcpSocket)
 
-func WithLog(log _interface.Log) Opt {
+func WithLog(log _interface.Log) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		socket.log = log
 	}
 }
 
-func WithHandlePacket(h func(packet _interface.BinaryPacket)) Opt {
+func WithHandlePacket(h func(packet _interface.BinaryPacket)) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		socket.handleBinaryPacket = h
 	}
 }
 
-func WithSendBuffSize(size int) Opt {
+func WithSendBuffSize(size int) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		if size > max_buff_size {
 			size = max_buff_size
@@ -88,7 +89,7 @@ func WithSendBuffSize(size int) Opt {
 	}
 }
 
-func WithRecivBuffSize(size int) Opt {
+func WithRecivBuffSize(size int) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		if size > max_buff_size {
 			size = max_buff_size
@@ -98,7 +99,7 @@ func WithRecivBuffSize(size int) Opt {
 	}
 }
 
-func WithConnectTimeOut(timeOut int) Opt {
+func WithConnectTimeOut(timeOut int) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		if timeOut > 0 {
 			socket.connTimeOut = timeOut
@@ -106,7 +107,7 @@ func WithConnectTimeOut(timeOut int) Opt {
 	}
 }
 
-func WithSendTimeOut(timeOut int) Opt {
+func WithSendTimeOut(timeOut int) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		if timeOut > 0 {
 			socket.sendTimeOut = timeOut
@@ -114,7 +115,7 @@ func WithSendTimeOut(timeOut int) Opt {
 	}
 }
 
-func WithRecvTimeOut(timeOut int) Opt {
+func WithRecvTimeOut(timeOut int) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		if timeOut > 0 {
 			socket.recvTimeOut = timeOut
@@ -122,13 +123,13 @@ func WithRecvTimeOut(timeOut int) Opt {
 	}
 }
 
-func WithBinaryPacket(packet _interface.BinaryPacket) Opt {
+func WithBinaryPacket(packet _interface.BinaryPacket) GameSocketOpt {
 	return func(socket *TcpSocket) {
 		socket.packetType = packet
 	}
 }
 
-func (socket *TcpSocket) initBuffer() {
+func (socket *TcpSocket) init() {
 	socket.sendCond = sync.NewCond(&sync.Mutex{})
 	socket.sendBuffList1 = linklist.New()
 	socket.sendBuffList2 = linklist.New()
@@ -140,10 +141,24 @@ func (socket *TcpSocket) initBuffer() {
 	if socket.recvBuf == nil {
 		socket.recvBuf = buffer.NewRingBuffer(64 * 1024)
 	}
+
+	socket.exitSendChan = make(chan bool, 1)
+	socket.exitRecvChan = make(chan bool, 1)
+
+	if socket.packetType == nil {
+		socket.packetType = &packet.WorldPacket{}
+	}
+
+	socket.localAddr = socket.conn.LocalAddr().String()
+	socket.peerAddr = socket.conn.RemoteAddr().String()
+
+	if socket.log == nil {
+		socket.log = defualtLog(fmt.Sprintf("%s:%s", socket.peerAddr, socket.localAddr))
+	}
 }
 
-func NewTcpSocket(addr string, port uint16, opts ...Opt) (*TcpSocket, error) {
-	socket := &TcpSocket{state: SOCKET_STATE_CREATE}
+func NewTcpSocket(addr string, port uint16, opts ...GameSocketOpt) (*TcpSocket, error) {
+	socket := &TcpSocket{state: network.SOCKET_STATE_CREATE}
 	for _, fn := range (opts) {
 		fn(socket)
 	}
@@ -160,50 +175,25 @@ func NewTcpSocket(addr string, port uint16, opts ...Opt) (*TcpSocket, error) {
 		return nil, err
 	}
 
-	socket.initBuffer()
+	socket.init()
 
-	if socket.packetType == nil {
-		socket.packetType = &packet.WorldPacket{}
-	}
-	socket.exitSendChan = make(chan bool, 1)
-	socket.exitRecvChan = make(chan bool, 1)
 	go socket.sendSocketData()
 	go socket.recvMsg()
 	return socket, nil
 }
 
-func (socket *TcpSocket) SetHandler(fn func(packet _interface.BinaryPacket)) {
-	socket.handleBinaryPacket = fn
-}
-
-func (socket *TcpSocket) SetLog(log _interface.Log) {
-	socket.log = log
-}
-
-func NewConnSocket(conn net.Conn, opts ...Opt) (*TcpSocket, error) {
+func NewConnSocket(conn net.Conn, opts ...GameSocketOpt) (*TcpSocket, error) {
 	if conn == nil {
 		return nil, Err_Conn_Is_Nil
 	}
 
-	socket := &TcpSocket{state: SOCKET_STATE_OPEN}
+	socket := &TcpSocket{state: network.SOCKET_STATE_OPEN}
 	for _, fn := range (opts) {
 		fn(socket)
 	}
 
-	if conn == nil {
-		return nil, Err_Conn_Is_Nil
-	}
-
-	socket.localAddr = conn.LocalAddr().String()
-	socket.peerAddr = conn.RemoteAddr().String()
 	socket.conn = conn
-	socket.initBuffer()
-	socket.exitSendChan = make(chan bool, 1)
-	socket.exitRecvChan = make(chan bool, 1)
-
-	if socket.packetType == nil {
-		socket.packetType = &packet.WorldPacket{}
-	}
+	socket.init()
 
 	go socket.sendSocketData()
 	go socket.recvMsg()
@@ -214,22 +204,18 @@ func NewConnSocket(conn net.Conn, opts ...Opt) (*TcpSocket, error) {
 func (socket *TcpSocket) sendSocketData() {
 	time.Sleep(time.Second * 2)
 	for {
-		if atomic.LoadUint32(&socket.state) == SOCKET_STATE_CLOSE {
+		if atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_CLOSE {
 			socket.exitSendChan <- true
 			break
 		}
 
 		socket.sendCond.L.Lock()
 		if socket.sendBuffList.Empty() {
-			if socket.log != nil {
-				socket.log.Infof("socket %v :%v wait send data", unsafe.Pointer(socket), socket.localAddr)
-			}
+			socket.log.Infof("socket %v :%v wait send data", unsafe.Pointer(socket), socket.localAddr)
 			socket.sendCond.Wait()
 		}
 
-		if socket.log != nil {
-			socket.log.Infof("socket %v handle send data :%v", unsafe.Pointer(socket), socket.sendBuffList.Size())
-		}
+		socket.log.Infof("socket %v handle send data :%v", unsafe.Pointer(socket), socket.sendBuffList.Size())
 
 		buffList := socket.sendBuffList
 		if socket.sendBuffList == socket.sendBuffList1 {
@@ -253,24 +239,19 @@ func (socket *TcpSocket) sendSocketData() {
 					buffList.Remove(0)
 					//直接发送packet
 					_, err := socket.conn.Write(packet.GetPacket(false))
-					if err != nil && socket.log != nil {
-						socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
-					}
+					socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
+
 				} else {
 					_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
-					if err != nil && socket.log != nil {
-						socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
-					}
+					socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
 					socket.sendBuf.Reset()
 				}
 			}
 		}
-		if !socket.sendBuf.IsEmpty(){
+		if !socket.sendBuf.IsEmpty() {
 			//直接发送packet
 			_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
-			if err != nil && socket.log != nil {
-				socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
-			}
+			socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
 			socket.sendBuf.Reset()
 		}
 	}
@@ -312,8 +293,8 @@ func (socket *TcpSocket) closeRecv() {
 func (socket *TcpSocket) Close() {
 	for {
 		old := atomic.LoadUint32(&socket.state)
-		if old != SOCKET_STATE_CLOSE {
-			if atomic.CompareAndSwapUint32(&socket.state, old, SOCKET_STATE_CLOSE) {
+		if old != network.SOCKET_STATE_CLOSE {
+			if atomic.CompareAndSwapUint32(&socket.state, old, network.SOCKET_STATE_CLOSE) {
 				if socket.exitSendChan != nil {
 					socket.closeSend()
 					socket.closeRecv()
@@ -327,16 +308,16 @@ func (socket *TcpSocket) Close() {
 }
 
 func (socket *TcpSocket) IsOpen() bool {
-	return atomic.LoadUint32(&socket.state) == SOCKET_STATE_OPEN
+	return atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_OPEN
 }
 
 func (socket *TcpSocket) Connect(timeout time.Duration) error {
-	if atomic.CompareAndSwapUint32(&socket.state, SOCKET_STATE_CREATE, SOCKET_STATE_CONNECTING) {
+	if atomic.CompareAndSwapUint32(&socket.state, network.SOCKET_STATE_CREATE, network.SOCKET_STATE_CONNECTING) {
 		conn, err := net.DialTimeout("tcp", socket.peerAddr, timeout)
 		if err != nil {
 			return err
 		}
-		if atomic.CompareAndSwapUint32(&socket.state, SOCKET_STATE_CONNECTING, SOCKET_STATE_OPEN) {
+		if atomic.CompareAndSwapUint32(&socket.state, network.SOCKET_STATE_CONNECTING, network.SOCKET_STATE_OPEN) {
 			socket.conn = conn
 			socket.localAddr = conn.LocalAddr().String()
 		} else {
@@ -352,9 +333,7 @@ func (socket *TcpSocket) SendPacket(packet _interface.BinaryPacket) error {
 	}
 
 	if packet == nil {
-		if socket.log != nil {
-			socket.log.Errorf("send ni packet %s", string(debug.Stack()))
-		}
+		socket.log.Errorf("send ni packet %s", string(debug.Stack()))
 		return Err_Send_Packet_Is_Nil
 	}
 
@@ -372,7 +351,7 @@ func (socket *TcpSocket) SendPacket(packet _interface.BinaryPacket) error {
 
 func (socket *TcpSocket) recvMsg() {
 	for {
-		if atomic.LoadUint32(&socket.state) == SOCKET_STATE_CLOSE {
+		if atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_CLOSE {
 			socket.exitRecvChan <- true
 			break
 		}
@@ -440,9 +419,7 @@ func (socket *TcpSocket) recvMsg() {
 					break
 				}
 			} else {
-				if socket.log != nil {
-					socket.log.Info("socket remote addr %v recv error format packet, will close", socket.peerAddr)
-				}
+				socket.log.Info("socket remote addr %v recv error format packet, will close", socket.peerAddr)
 				break
 			}
 		}

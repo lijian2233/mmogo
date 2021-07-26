@@ -2,32 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ca08c2d3-bdb1-4564-93b1-1025f20c78e3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/network/listen/default_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/network/listen/default_logger.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/network/socket/defalut_logger.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/protocal/define_op.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/buffer/ring_buffer.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/buffer/ring_buffer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/buffer/ring_buffer_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/buffer/ring_buffer_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/binaryop/util.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/binaryop/util.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/binaryop/util_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/binaryop/util_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/common.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/common/common.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/locker/cas_lock.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/locker/cas_lock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/locker/empty_lock.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/locker/empty_lock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/locker/lock_interface.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/interface/lock_interface.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/locker/mutex_lock.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/locker/mutex_lock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/logger/async_write.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/logger/async_write.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/logger/color.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/logger/color.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/logger/level.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/logger/level.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/logger/logger.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/logger/logger.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/net/net.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/net/net.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gameInterface/binary_packet.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/interface/binary_packet.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gameInterface/log.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/interface/log.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/network/gamesocket.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/network/gamesocket.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/network/listensocket.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/network/listensocket.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/network/net_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/network/net_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pack/worldpacket.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/packet/worldpacket.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/timer/timer.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/timer/timer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/timer/timer_async.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/timer/timer_async.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/timer/timer_interface.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/timer/timer_interface.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/timer/timer_sync.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/timer/timer_sync.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/timer/timer_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/timer/timer_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/network/gamesocket.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/network/socket/gamesocket.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/network/listensocket.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/network/listen/listensocket.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/network/net_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/network/test/net_test.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -38,31 +20,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/lib/packet/worldpacket.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-172">
-              <caret line="555" column="9" lean-forward="true" selection-start-line="555" selection-start-column="9" selection-end-line="555" selection-end-column="9" />
-              <folding>
-                <element signature="e#14#99#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/lib/logger/level.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-187">
-              <caret line="51" column="20" lean-forward="true" selection-start-line="51" selection-start-column="20" selection-end-line="51" selection-end-column="20" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/lib/logger/logger.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="156">
-              <caret line="35" column="23" lean-forward="true" selection-start-line="35" selection-start-column="23" selection-end-line="35" selection-end-column="23" />
+            <state relative-caret-position="128">
+              <caret line="22" column="5" selection-start-line="22" selection-start-column="5" selection-end-line="22" selection-end-column="5" />
               <folding>
                 <element signature="e#16#90#0" expanded="true" />
               </folding>
@@ -70,55 +31,25 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/lib/net/net.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" column="5" selection-start-line="4" selection-start-column="5" selection-end-line="4" selection-end-column="5" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/network/gamesocket.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2167">
-              <caret line="16" selection-start-line="16" selection-end-line="16" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/network/listensocket.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="107">
-              <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
-              <folding>
-                <element signature="e#17#79#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/network/net_test.go">
+        <entry file="file://$PROJECT_DIR$/src/network/socket/gamesocket.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
-              <caret line="60" column="19" lean-forward="true" selection-start-line="60" selection-start-column="19" selection-end-line="60" selection-end-column="19" />
+            <state relative-caret-position="204">
+              <caret line="421" column="110" selection-start-line="421" selection-start-column="110" selection-end-line="421" selection-end-column="110" />
               <folding>
-                <element signature="e#17#116#0" expanded="true" />
+                <element signature="e#17#234#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/lib/binaryop/util.go">
+        <entry file="file://$PROJECT_DIR$/src/network/socket/defalut_logger.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1486">
-              <caret line="12" column="40" lean-forward="true" selection-start-line="12" selection-start-column="40" selection-end-line="12" selection-end-column="40" />
+            <state relative-caret-position="195">
+              <caret line="13" lean-forward="true" selection-start-line="13" selection-end-line="13" />
               <folding>
-                <element signature="e#18#85#0" expanded="true" />
+                <element signature="e#16#76#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -126,16 +57,74 @@
       </file>
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/network/socketstate.go">
-          <provider selected="true" editor-type-id="text-editor" />
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="10" selection-start-line="10" selection-end-line="10" />
+            </state>
+          </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/lib/common/common.go">
+        <entry file="file://$PROJECT_DIR$/src/interface/binary_packet.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+            <state relative-caret-position="15">
+              <caret line="1" selection-start-line="1" selection-end-line="1" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/network/listen/listensocket.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="226">
+              <caret line="55" column="18" lean-forward="true" selection-start-line="55" selection-start-column="18" selection-end-line="55" selection-end-column="18" />
               <folding>
-                <element signature="e#16#66#0" expanded="true" />
+                <element signature="e#17#79#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/network/listen/default_handler.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="240">
+              <caret line="16" column="1" lean-forward="true" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
+              <folding>
+                <element signature="e#16#40#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file:///usr/local/Cellar/go/1.16.3/src/net/net.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="137">
+              <caret line="106" column="4" selection-start-line="106" selection-start-column="4" selection-end-line="106" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/network/listen/default_logger.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="105">
+              <caret line="7" selection-start-line="7" selection-end-line="12" selection-end-column="1" />
+              <folding>
+                <element signature="e#16#76#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/network/test/net_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-35">
+              <caret line="86" lean-forward="true" selection-start-line="86" selection-end-line="86" />
+              <folding>
+                <element signature="e#17#116#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -152,8 +141,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>%v</find>
-      <find>Adjust</find>
       <find>getOp</find>
       <find>sendMsg</find>
       <find>SendPacket</find>
@@ -168,7 +155,6 @@
       <find>exitRecvChan</find>
       <find>SendMsg</find>
       <find>Unsafe</find>
-      <find>SetLog</find>
       <find>sendPacket</find>
       <find>ParsePacketHeader</find>
       <find>GetWorldPacketHeaderSize</find>
@@ -181,7 +167,10 @@
       <find>Int16ToByte</find>
       <find>lib.</find>
       <find>GetLocalIp</find>
+      <find>...</find>
       <find>Adj</find>
+      <find>SetHandler</find>
+      <find>SetLog</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -197,13 +186,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/toml/prod.go" />
-        <option value="$PROJECT_DIR$/src/logger/logger.go" />
-        <option value="$PROJECT_DIR$/src/common/locker/locker.go" />
-        <option value="$PROJECT_DIR$/src/common/locker/mutex.go" />
-        <option value="$PROJECT_DIR$/src/common/locker/cas.go" />
-        <option value="$PROJECT_DIR$/src/common/locker/mutex_lock.go" />
-        <option value="$PROJECT_DIR$/src/common/locker/cond_lock.go" />
         <option value="$PROJECT_DIR$/src/timer/timer.go" />
         <option value="$PROJECT_DIR$/src/timer/timer_interface.go" />
         <option value="$PROJECT_DIR$/src/timer/timer_test.go" />
@@ -241,19 +223,26 @@
         <option value="$PROJECT_DIR$/src/lib/buffer/ring_buffer_test.go" />
         <option value="$PROJECT_DIR$/src/lib/buffer/ring_buffer.go" />
         <option value="$PROJECT_DIR$/src/packet/worldpacket.go" />
-        <option value="$PROJECT_DIR$/src/network/gamesocket.go" />
         <option value="$PROJECT_DIR$/src/lib/binaryop/util.go" />
         <option value="$PROJECT_DIR$/src/lib/logger/level.go" />
         <option value="$PROJECT_DIR$/src/lib/packet/worldpacket.go" />
         <option value="$PROJECT_DIR$/src/lib/logger/logger.go" />
-        <option value="$PROJECT_DIR$/src/network/listensocket.go" />
         <option value="$PROJECT_DIR$/src/network/net_test.go" />
+        <option value="$PROJECT_DIR$/src/protocal/define_op.go" />
+        <option value="$PROJECT_DIR$/src/network/gamesocket.go" />
+        <option value="$PROJECT_DIR$/src/network/listensocket.go" />
+        <option value="$PROJECT_DIR$/src/network/listen/default_logger.go" />
+        <option value="$PROJECT_DIR$/src/network/listen/listensocket.go" />
+        <option value="$PROJECT_DIR$/src/network/listen/default_handler.go" />
+        <option value="$PROJECT_DIR$/src/network/test/net_test.go" />
+        <option value="$PROJECT_DIR$/src/network/socket/defalut_logger.go" />
+        <option value="$PROJECT_DIR$/src/network/socket/gamesocket.go" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="81" />
-    <option name="y" value="98" />
+    <option name="x" value="-64" />
+    <option name="y" value="23" />
     <option name="width" value="1440" />
     <option name="height" value="806" />
   </component>
@@ -278,14 +267,13 @@
               <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
               <item name="mmogo" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
+              <item name="interface" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
               <item name="mmogo" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="lib" type="462c0819:PsiDirectoryNode" />
-              <item name="binaryop" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
@@ -298,21 +286,34 @@
               <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
               <item name="mmogo" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
-              <item name="net" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
-              <item name="mmogo" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
-              <item name="packet" type="462c0819:PsiDirectoryNode" />
+              <item name="network" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
               <item name="mmogo" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="network" type="462c0819:PsiDirectoryNode" />
+              <item name="listen" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mmogo" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="network" type="462c0819:PsiDirectoryNode" />
+              <item name="socket" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mmogo" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="network" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="mmogo" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="protocal" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
@@ -366,6 +367,13 @@
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
               <item name="Go SDK 1.16.3" type="20ee2d1f:SyntheticLibraryElementNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="net" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="mmogo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="Go SDK 1.16.3" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="runtime" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -395,11 +403,11 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/network/test" />
+      <recent name="$PROJECT_DIR$/src/network/listen" />
+      <recent name="$PROJECT_DIR$/src/network/socket" />
       <recent name="$PROJECT_DIR$/src/lib" />
       <recent name="$PROJECT_DIR$/lib" />
-      <recent name="$PROJECT_DIR$/src/interface" />
-      <recent name="$PROJECT_DIR$/src/server" />
-      <recent name="$PROJECT_DIR$/src/common" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -414,8 +422,8 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.TestNew in mmogo/network">
-    <configuration name="TestCond in mmogo/network" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go Test.TestNew in mmogo/network/test">
+    <configuration name="TestClient in mmogo/network" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="mmogo" />
       <working_directory value="$PROJECT_DIR$/src/network" />
       <framework value="gotest" />
@@ -423,7 +431,7 @@
       <package value="mmogo/network" />
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestCond$" />
+      <pattern value="^TestClient$" />
       <method v="2" />
     </configuration>
     <configuration name="TestNew in mmogo/network" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -437,15 +445,15 @@
       <pattern value="^TestNew$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestRingBuffer in mmogo/buffer" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestNew in mmogo/network/test" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="mmogo" />
-      <working_directory value="$PROJECT_DIR$/src/buffer" />
+      <working_directory value="$PROJECT_DIR$/src/network/test" />
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="mmogo/buffer" />
+      <package value="mmogo/network/test" />
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestRingBuffer$" />
+      <pattern value="^TestNew$" />
       <method v="2" />
     </configuration>
     <configuration name="TestRingBuffer in mmogo/lib/buffer" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -472,30 +480,15 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestNew in mmogo/network/test" />
+        <item itemvalue="Go Test.TestClient in mmogo/network" />
         <item itemvalue="Go Test.TestNew in mmogo/network" />
         <item itemvalue="Go Test.TestRingBuffer in mmogo/lib/buffer" />
         <item itemvalue="Go Test.TestTimer_SyncTimer in mmogo/lib/timer" />
-        <item itemvalue="Go Test.TestCond in mmogo/network" />
-        <item itemvalue="Go Test.TestRingBuffer in mmogo/buffer" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="TestNew_in_mmogo_network - 2021.07.19 at 21h 42m 09s.xml">
-      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestNew_in_mmogo_network - 2021.07.19 at 21h 44m 12s.xml">
-      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestNew_in_mmogo_network - 2021.07.19 at 21h 46m 59s.xml">
-      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestNew_in_mmogo_network - 2021.07.19 at 21h 47m 31s.xml">
-      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="TestNew_in_mmogo_network - 2021.07.19 at 21h 48m 57s.xml">
-      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="TestNew_in_mmogo_network - 2021.07.19 at 21h 49m 48s.xml">
       <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -511,18 +504,33 @@
     <history-entry file="TestRingBuffer_in_mmogo_lib_buffer - 2021.07.22 at 21h 46m 29s.xml">
       <configuration name="TestRingBuffer in mmogo/lib/buffer" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="TestNew_in_mmogo_network - 2021.07.22 at 21h 57m 59s.xml">
+      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestClient_in_mmogo_network - 2021.07.23 at 16h 54m 43s.xml">
+      <configuration name="TestClient in mmogo/network" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestNew_in_mmogo_network - 2021.07.23 at 17h 47m 30s.xml">
+      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestNew_in_mmogo_network - 2021.07.23 at 17h 47m 55s.xml">
+      <configuration name="TestNew in mmogo/network" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="TestNew_in_mmogo_network_test - 2021.07.26 at 10h 45m 22s.xml">
+      <configuration name="TestNew in mmogo/network/test" configurationId="GoTestRunConfiguration" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="81" y="98" width="1440" height="806" extended-state="0" />
+    <frame x="-64" y="23" width="1440" height="806" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2532189" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2532189" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3299566" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3299566" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.3299566" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.23733719" />
+      <window_info anchor="bottom" id="Debug" order="3" visible="true" weight="0.3299566" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -637,44 +645,32 @@
           <option name="timeStamp" value="63" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/net_test.go</url>
-          <line>99</line>
+          <url>file://$PROJECT_DIR$/src/network/test/net_test.go</url>
+          <line>101</line>
           <properties />
           <option name="timeStamp" value="95" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/net_test.go</url>
-          <line>110</line>
-          <properties />
-          <option name="timeStamp" value="96" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/net_test.go</url>
-          <line>111</line>
-          <properties />
-          <option name="timeStamp" value="99" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/gamesocket.go</url>
+          <url>file://$PROJECT_DIR$/src/network/socket/gamesocket.go</url>
           <line>425</line>
           <properties />
           <option name="timeStamp" value="146" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/gamesocket.go</url>
+          <url>file://$PROJECT_DIR$/src/network/socket/gamesocket.go</url>
           <line>374</line>
           <properties />
           <option name="timeStamp" value="149" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/gamesocket.go</url>
+          <url>file://$PROJECT_DIR$/src/network/socket/gamesocket.go</url>
           <line>403</line>
           <properties />
           <option name="timeStamp" value="151" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/src/network/net_test.go</url>
-          <line>69</line>
+          <url>file://$PROJECT_DIR$/src/network/test/net_test.go</url>
+          <line>71</line>
           <properties />
           <option name="timeStamp" value="152" />
         </line-breakpoint>
@@ -696,30 +692,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/go.mod">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/conf/toml/prod.toml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="24" selection-start-line="22" selection-start-column="24" selection-end-line="22" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/conf/toml/dev.toml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="21" column="4" selection-start-line="21" selection-start-column="4" selection-end-line="23" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/conf/conf.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="38">
-          <caret line="21" column="22" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/Cellar/go/1.16.3/src/runtime/malloc.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="98">
@@ -755,13 +727,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
           <caret line="142" selection-start-line="142" selection-end-line="142" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/Cellar/go/1.16.3/src/net/net.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="116" column="4" selection-start-line="116" selection-start-column="4" selection-end-line="116" selection-end-column="4" />
         </state>
       </provider>
     </entry>
@@ -937,29 +902,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/interface/binary_packet.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/interface/log.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" selection-start-line="16" selection-end-line="16" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/binaryop/util_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="210">
           <caret line="17" column="18" lean-forward="true" selection-start-line="17" selection-start-column="18" selection-end-line="17" selection-end-column="18" />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/interface/lock_interface.go">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/locker/cas_lock.go">
       <provider selected="true" editor-type-id="text-editor">
@@ -994,27 +942,17 @@
     <entry file="file://$PROJECT_DIR$/src/lib/common/common.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="210">
-          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
           <folding>
             <element signature="e#16#66#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/network/socketstate.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/network/gamesocket.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2167">
-          <caret line="16" selection-start-line="16" selection-end-line="16" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/binaryop/util.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1486">
-          <caret line="12" column="40" lean-forward="true" selection-start-line="12" selection-start-column="40" selection-end-line="12" selection-end-column="40" />
+          <caret line="12" column="40" selection-start-line="12" selection-start-column="40" selection-end-line="12" selection-end-column="40" />
           <folding>
             <element signature="e#18#85#0" expanded="true" />
           </folding>
@@ -1024,14 +962,14 @@
     <entry file="file://$PROJECT_DIR$/src/lib/logger/level.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-187">
-          <caret line="51" column="20" lean-forward="true" selection-start-line="51" selection-start-column="20" selection-end-line="51" selection-end-column="20" />
+          <caret line="51" column="20" selection-start-line="51" selection-start-column="20" selection-end-line="51" selection-end-column="20" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/packet/worldpacket.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-172">
-          <caret line="555" column="9" lean-forward="true" selection-start-line="555" selection-start-column="9" selection-end-line="555" selection-end-column="9" />
+          <caret line="555" column="9" selection-start-line="555" selection-start-column="9" selection-end-line="555" selection-end-column="9" />
           <folding>
             <element signature="e#14#99#0" expanded="true" />
           </folding>
@@ -1045,32 +983,110 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/protocal/define_op.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="25" selection-start-line="16" selection-start-column="25" selection-end-line="16" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/interface/lock_interface.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/interface/binary_packet.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/interface/log.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" lean-forward="true" selection-start-line="16" selection-end-line="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/network/socketstate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/logger/logger.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="35" column="23" lean-forward="true" selection-start-line="35" selection-start-column="23" selection-end-line="35" selection-end-column="23" />
+        <state relative-caret-position="128">
+          <caret line="22" column="5" selection-start-line="22" selection-start-column="5" selection-end-line="22" selection-end-column="5" />
           <folding>
             <element signature="e#16#90#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/network/listensocket.go">
+    <entry file="file:///usr/local/Cellar/go/1.16.3/src/net/net.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="107">
-          <caret line="21" lean-forward="true" selection-start-line="21" selection-end-line="21" />
+        <state relative-caret-position="137">
+          <caret line="106" column="4" selection-start-line="106" selection-start-column="4" selection-end-line="106" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/network/listen/default_handler.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="1" lean-forward="true" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
+          <folding>
+            <element signature="e#16#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/network/listen/listensocket.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="226">
+          <caret line="55" column="18" lean-forward="true" selection-start-line="55" selection-start-column="18" selection-end-line="55" selection-end-column="18" />
           <folding>
             <element signature="e#17#79#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/network/net_test.go">
+    <entry file="file://$PROJECT_DIR$/src/network/test/net_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="60" column="19" lean-forward="true" selection-start-line="60" selection-start-column="19" selection-end-line="60" selection-end-column="19" />
+        <state relative-caret-position="-35">
+          <caret line="86" lean-forward="true" selection-start-line="86" selection-end-line="86" />
           <folding>
             <element signature="e#17#116#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/network/listen/default_logger.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" selection-start-line="7" selection-end-line="12" selection-end-column="1" />
+          <folding>
+            <element signature="e#16#76#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/network/socket/defalut_logger.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="13" lean-forward="true" selection-start-line="13" selection-end-line="13" />
+          <folding>
+            <element signature="e#16#76#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/network/socket/gamesocket.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="421" column="110" selection-start-line="421" selection-start-column="110" selection-end-line="421" selection-end-column="110" />
+          <folding>
+            <element signature="e#17#234#0" expanded="true" />
           </folding>
         </state>
       </provider>

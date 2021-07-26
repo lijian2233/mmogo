@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"errors"
 	"fmt"
 	linklist "github.com/emirpasic/gods/lists/singlylinkedlist"
 	"mmogo/interface"
@@ -17,19 +16,9 @@ import (
 	"unsafe"
 )
 
-type TcpSocket struct {
-	connTimeOut int
-	sendTimeOut int
-	recvTimeOut int
-
-	conn  net.Conn
-	state uint32
-
-	//peer ip port
-	peerAddr string
-
-	//本端ip port
-	localAddr string
+type GameSocket struct {
+	tcpSocket
+	connTimeOut time.Duration
 
 	//发送缓冲区
 	sendBuf  *buffer.RingBuffer
@@ -55,33 +44,28 @@ type TcpSocket struct {
 	packetType _interface.BinaryPacket
 
 	handleBinaryPacket func(_interface.BinaryPacket)
-	log                _interface.Log
+	logger             _interface.Logger
 }
 
 const max_buff_size = 0x400000 //4M
-var Err_Conncet_Unknown = errors.New("unknown")
-var Err_Max_Buff_Size = errors.New("buff size must less 4M")
-var Err_Socket_Not_Open = errors.New("socket not open")
-var Err_Conn_Is_Nil = errors.New("conn is nil")
-var Err_Handler_Packet_Fn = errors.New("handler packet func must not nil")
-var Err_Send_Packet_Is_Nil = errors.New("send ni packet")
 
-type GameSocketOpt func(socket *TcpSocket)
 
-func WithLog(log _interface.Log) GameSocketOpt {
-	return func(socket *TcpSocket) {
-		socket.log = log
+type GameSocketOpt func(socket *GameSocket)
+
+func WithGameLog(logger _interface.Logger) GameSocketOpt {
+	return func(socket *GameSocket) {
+		socket.logger = logger
 	}
 }
 
-func WithHandlePacket(h func(packet _interface.BinaryPacket)) GameSocketOpt {
-	return func(socket *TcpSocket) {
+func WithGameHandlePacket(h func(packet _interface.BinaryPacket)) GameSocketOpt {
+	return func(socket *GameSocket) {
 		socket.handleBinaryPacket = h
 	}
 }
 
-func WithSendBuffSize(size int) GameSocketOpt {
-	return func(socket *TcpSocket) {
+func WithGameSendBuffSize(size int) GameSocketOpt {
+	return func(socket *GameSocket) {
 		if size > max_buff_size {
 			size = max_buff_size
 		}
@@ -89,8 +73,8 @@ func WithSendBuffSize(size int) GameSocketOpt {
 	}
 }
 
-func WithRecivBuffSize(size int) GameSocketOpt {
-	return func(socket *TcpSocket) {
+func WithGameRecivBuffSize(size int) GameSocketOpt {
+	return func(socket *GameSocket) {
 		if size > max_buff_size {
 			size = max_buff_size
 		}
@@ -99,37 +83,21 @@ func WithRecivBuffSize(size int) GameSocketOpt {
 	}
 }
 
-func WithConnectTimeOut(timeOut int) GameSocketOpt {
-	return func(socket *TcpSocket) {
+func WithGameConnectTimeOut(timeOut time.Duration) GameSocketOpt {
+	return func(socket *GameSocket) {
 		if timeOut > 0 {
 			socket.connTimeOut = timeOut
 		}
 	}
 }
 
-func WithSendTimeOut(timeOut int) GameSocketOpt {
-	return func(socket *TcpSocket) {
-		if timeOut > 0 {
-			socket.sendTimeOut = timeOut
-		}
-	}
-}
-
-func WithRecvTimeOut(timeOut int) GameSocketOpt {
-	return func(socket *TcpSocket) {
-		if timeOut > 0 {
-			socket.recvTimeOut = timeOut
-		}
-	}
-}
-
-func WithBinaryPacket(packet _interface.BinaryPacket) GameSocketOpt {
-	return func(socket *TcpSocket) {
+func WithGameBinaryPacket(packet _interface.BinaryPacket) GameSocketOpt {
+	return func(socket *GameSocket) {
 		socket.packetType = packet
 	}
 }
 
-func (socket *TcpSocket) init() {
+func (socket *GameSocket) init() {
 	socket.sendCond = sync.NewCond(&sync.Mutex{})
 	socket.sendBuffList1 = linklist.New()
 	socket.sendBuffList2 = linklist.New()
@@ -152,13 +120,16 @@ func (socket *TcpSocket) init() {
 	socket.localAddr = socket.conn.LocalAddr().String()
 	socket.peerAddr = socket.conn.RemoteAddr().String()
 
-	if socket.log == nil {
-		socket.log = defualtLog(fmt.Sprintf("%s:%s", socket.peerAddr, socket.localAddr))
+	if socket.logger == nil {
+		socket.logger = defualtLogger(fmt.Sprintf("%s:%s", socket.peerAddr, socket.localAddr))
 	}
+
+	go socket.sendDataRoutine()
+	go socket.recvMsgRoutine()
 }
 
-func NewTcpSocket(addr string, port uint16, opts ...GameSocketOpt) (*TcpSocket, error) {
-	socket := &TcpSocket{state: network.SOCKET_STATE_CREATE}
+func NewGameSocket(addr string, port uint16, opts ...GameSocketOpt) (*GameSocket, error) {
+	socket := &GameSocket{}
 	for _, fn := range (opts) {
 		fn(socket)
 	}
@@ -177,31 +148,26 @@ func NewTcpSocket(addr string, port uint16, opts ...GameSocketOpt) (*TcpSocket, 
 
 	socket.init()
 
-	go socket.sendSocketData()
-	go socket.recvMsg()
 	return socket, nil
 }
 
-func NewConnSocket(conn net.Conn, opts ...GameSocketOpt) (*TcpSocket, error) {
+func NewConnSocket(conn net.Conn, opts ...GameSocketOpt) (*GameSocket, error) {
 	if conn == nil {
 		return nil, Err_Conn_Is_Nil
 	}
 
-	socket := &TcpSocket{state: network.SOCKET_STATE_OPEN}
+	socket := &GameSocket{}
+	socket.state = network.SOCKET_STATE_OPEN
 	for _, fn := range (opts) {
 		fn(socket)
 	}
 
 	socket.conn = conn
 	socket.init()
-
-	go socket.sendSocketData()
-	go socket.recvMsg()
-
 	return socket, nil
 }
 
-func (socket *TcpSocket) sendSocketData() {
+func (socket *GameSocket) sendDataRoutine() {
 	time.Sleep(time.Second * 2)
 	for {
 		if atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_CLOSE {
@@ -211,11 +177,11 @@ func (socket *TcpSocket) sendSocketData() {
 
 		socket.sendCond.L.Lock()
 		if socket.sendBuffList.Empty() {
-			socket.log.Infof("socket %v :%v wait send data", unsafe.Pointer(socket), socket.localAddr)
+			socket.logger.Infof("socket %v :%v wait send data", unsafe.Pointer(socket), socket.localAddr)
 			socket.sendCond.Wait()
 		}
 
-		socket.log.Infof("socket %v handle send data :%v", unsafe.Pointer(socket), socket.sendBuffList.Size())
+		socket.logger.Infof("socket %v handle send data :%v", unsafe.Pointer(socket), socket.sendBuffList.Size())
 
 		buffList := socket.sendBuffList
 		if socket.sendBuffList == socket.sendBuffList1 {
@@ -239,11 +205,11 @@ func (socket *TcpSocket) sendSocketData() {
 					buffList.Remove(0)
 					//直接发送packet
 					_, err := socket.conn.Write(packet.GetPacket(false))
-					socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
+					socket.logger.Infof("socket :%v send data error %v", socket.localAddr, err)
 
 				} else {
 					_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
-					socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
+					socket.logger.Infof("socket :%v send data error %v", socket.localAddr, err)
 					socket.sendBuf.Reset()
 				}
 			}
@@ -251,17 +217,17 @@ func (socket *TcpSocket) sendSocketData() {
 		if !socket.sendBuf.IsEmpty() {
 			//直接发送packet
 			_, err := socket.conn.Write(socket.sendBuf.UnsafeReadBytes())
-			socket.log.Infof("socket :%v send data error %v", socket.localAddr, err)
+			socket.logger.Infof("socket :%v send data error %v", socket.localAddr, err)
 			socket.sendBuf.Reset()
 		}
 	}
 }
 
-func (socket *TcpSocket) onClose() {
+func (socket *GameSocket) onClose() {
 	socket.conn.Close()
 }
 
-func (socket *TcpSocket) closeSend() {
+func (socket *GameSocket) closeSend() {
 	defer func() {
 		recover()
 	}()
@@ -276,7 +242,7 @@ func (socket *TcpSocket) closeSend() {
 	socket.sendCond.Signal()
 }
 
-func (socket *TcpSocket) closeRecv() {
+func (socket *GameSocket) closeRecv() {
 	defer func() {
 		recover()
 	}()
@@ -290,7 +256,7 @@ func (socket *TcpSocket) closeRecv() {
 	socket.socketLock.Unlock()
 }
 
-func (socket *TcpSocket) Close() {
+func (socket *GameSocket) Close() {
 	for {
 		old := atomic.LoadUint32(&socket.state)
 		if old != network.SOCKET_STATE_CLOSE {
@@ -307,11 +273,11 @@ func (socket *TcpSocket) Close() {
 	}
 }
 
-func (socket *TcpSocket) IsOpen() bool {
+func (socket *GameSocket) IsOpen() bool {
 	return atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_OPEN
 }
 
-func (socket *TcpSocket) Connect(timeout time.Duration) error {
+func (socket *GameSocket) Connect(timeout time.Duration) error {
 	if atomic.CompareAndSwapUint32(&socket.state, network.SOCKET_STATE_CREATE, network.SOCKET_STATE_CONNECTING) {
 		conn, err := net.DialTimeout("tcp", socket.peerAddr, timeout)
 		if err != nil {
@@ -327,13 +293,13 @@ func (socket *TcpSocket) Connect(timeout time.Duration) error {
 	return Err_Conncet_Unknown
 }
 
-func (socket *TcpSocket) SendPacket(packet _interface.BinaryPacket) error {
+func (socket *GameSocket) SendPacket(packet _interface.BinaryPacket) error {
 	if !socket.IsOpen() {
 		return Err_Socket_Not_Open
 	}
 
 	if packet == nil {
-		socket.log.Errorf("send ni packet %s", string(debug.Stack()))
+		socket.logger.Errorf("send ni packet %s", string(debug.Stack()))
 		return Err_Send_Packet_Is_Nil
 	}
 
@@ -349,7 +315,7 @@ func (socket *TcpSocket) SendPacket(packet _interface.BinaryPacket) error {
 	return nil
 }
 
-func (socket *TcpSocket) recvMsg() {
+func (socket *GameSocket) recvMsgRoutine() {
 	for {
 		if atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_CLOSE {
 			socket.exitRecvChan <- true
@@ -419,7 +385,7 @@ func (socket *TcpSocket) recvMsg() {
 					break
 				}
 			} else {
-				socket.log.Info("socket remote addr %v recv error format packet, will close", socket.peerAddr)
+				socket.logger.Info("socket remote addr %v recv error format packet, will close", socket.peerAddr)
 				break
 			}
 		}

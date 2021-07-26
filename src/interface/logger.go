@@ -1,7 +1,7 @@
 package _interface
 
 
-type Log interface {
+type Logger interface {
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	Info(args ...interface{})

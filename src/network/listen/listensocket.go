@@ -18,25 +18,24 @@ type ListenSocket struct {
 	port     uint16
 	state    uint32
 	closed   bool
-	log      _interface.Log
+	logger   _interface.Logger
 	listener *net.TCPListener
 	handler  acceptFn
 }
 
-type Opt func (l* ListenSocket)
+type Opt func(l *ListenSocket)
 
-func WithLog(log _interface.Log) Opt  {
-	return func(l* ListenSocket) {
-		l.log = log
+func WithLog(logger _interface.Logger) Opt {
+	return func(l *ListenSocket) {
+		l.logger = logger
 	}
 }
 
-func WithHandler(fn func(conn net.Conn)) Opt  {
+func WithHandler(fn func(conn net.Conn)) Opt {
 	return func(l *ListenSocket) {
 		l.handler = fn
 	}
 }
-
 
 func NewListenSocket(addr string, port uint16, opts ...Opt) (*ListenSocket, error) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf("%s:%d", addr, port))
@@ -52,12 +51,12 @@ func NewListenSocket(addr string, port uint16, opts ...Opt) (*ListenSocket, erro
 	l := &ListenSocket{addr: addr, port: port, listener: tcpListen, state: network.SOCKET_STATE_OPEN}
 
 	if len(opts) > 0 {
-		for _, opt := range opts{
+		for _, opt := range opts {
 			opt(l)
 		}
 	}
-	if l.log == nil {
-		l.log = defualtLog(fmt.Sprintf("%s:%d", addr, port))
+	if l.logger == nil {
+		l.logger = defualtLogger(fmt.Sprintf("%s:%d", addr, port))
 	}
 
 	if l.handler == nil {
@@ -67,8 +66,8 @@ func NewListenSocket(addr string, port uint16, opts ...Opt) (*ListenSocket, erro
 }
 
 func (l *ListenSocket) Start() {
-	if !atomic.CompareAndSwapUint32(&l.state,  network.SOCKET_STATE_OPEN, network.SOCKET_STATE_LISTEN) {
-		l.log.Errorf("listen socket :%v start error:%v", l.port, "not open state")
+	if !atomic.CompareAndSwapUint32(&l.state, network.SOCKET_STATE_OPEN, network.SOCKET_STATE_LISTEN) {
+		l.logger.Errorf("listen socket :%v start error:%v", l.port, "not open state")
 		return
 	}
 	for {
@@ -79,7 +78,7 @@ func (l *ListenSocket) Start() {
 			if atomic.LoadUint32(&l.state) == network.SOCKET_STATE_CLOSING {
 				atomic.StoreUint32(&l.state, network.SOCKET_STATE_CLOSE)
 				l.closed = true
-				l.log.Warningf("listen socket :%v exit", l.port)
+				l.logger.Warningf("listen socket :%v exit", l.port)
 				return
 			}
 			continue
@@ -102,7 +101,7 @@ func (l *ListenSocket) Stop() {
 
 	case network.SOCKET_STATE_LISTEN:
 		{
-			if atomic.CompareAndSwapUint32(&l.state, network.SOCKET_STATE_LISTEN, network.SOCKET_STATE_CLOSING){
+			if atomic.CompareAndSwapUint32(&l.state, network.SOCKET_STATE_LISTEN, network.SOCKET_STATE_CLOSING) {
 				l.listener.Close()
 			}
 		}

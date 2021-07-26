@@ -5,7 +5,7 @@ import (
 	"mmogo/lib/logger"
 )
 
-func defualtLog(name string) _interface.Log {
+func defualtLogger(name string) _interface.Logger {
 	config := logger.DefaultConfig()
 	config.Dir = config.Dir + "/" + name
 	log, _ := logger.NewLogger(logger.DefaultConfig())

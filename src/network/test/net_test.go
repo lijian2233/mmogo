@@ -53,12 +53,12 @@ func parsePacket(packet *packet.WorldPacket) {
 	}
 }
 
-func handleAccept(conn net.Conn) {
+func handleGameSocketAccept(conn net.Conn) {
 	 socket.NewConnSocket(conn,
-	 	socket.WithSendBuffSize(256),
-	 	socket.WithRecivBuffSize(512),
-	 	socket.WithLog(log),
-	 	socket.WithHandlePacket(func(pack _interface.BinaryPacket) {
+	 	socket.WithGameSendBuffSize(256),
+	 	socket.WithGameRecivBuffSize(512),
+	 	socket.WithGameLog(log),
+	 	socket.WithGameHandlePacket(func(pack _interface.BinaryPacket) {
 	 		p , ok := pack.(*packet.WorldPacket)
 	 		if ok {
 	 			parsePacket(p)
@@ -76,9 +76,26 @@ func TestNew(t *testing.T) {
 	time.Sleep(time.Minute * 10)
 }
 
+func handleTelnetAccept(conn net.Conn)  {
+	socket.NewTelnetSocket(conn, socket.WithTelnetLog(log))
+}
+
+func TestTelnet(t *testing.T)  {
+	l, err := listen.NewListenSocket("127.0.0.1", 8080,
+		listen.WithLog(log), listen.WithHandler(handleTelnetAccept))
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	go l.Start()
+	time.Sleep(time.Minute * 5)
+}
+
 func TestNewListenSocket(t *testing.T) {
 	l, err := listen.NewListenSocket("127.0.0.1", 8080,
-		listen.WithLog(log), listen.WithHandler(handleAccept))
+		listen.WithLog(log), listen.WithHandler(handleGameSocketAccept))
 
 	if err != nil {
 		fmt.Println(err)

@@ -21,6 +21,7 @@ type ListenSocket struct {
 	logger   _interface.Logger
 	listener *net.TCPListener
 	handler  acceptFn
+	closeCh  chan bool
 }
 
 type Opt func(l *ListenSocket)
@@ -78,6 +79,7 @@ func (l *ListenSocket) Start() {
 			if atomic.LoadUint32(&l.state) == network.SOCKET_STATE_CLOSING {
 				atomic.StoreUint32(&l.state, network.SOCKET_STATE_CLOSE)
 				l.closed = true
+				l.closeCh <- true
 				l.logger.Warningf("listen socket :%v exit", l.port)
 				return
 			}
@@ -87,7 +89,7 @@ func (l *ListenSocket) Start() {
 	}
 }
 
-func (l *ListenSocket) Stop() {
+func (l *ListenSocket) Stop() <- chan bool{
 	s := atomic.LoadUint32(&l.state)
 
 	switch s {
@@ -96,6 +98,8 @@ func (l *ListenSocket) Stop() {
 			if atomic.CompareAndSwapUint32(&l.state, network.SOCKET_STATE_OPEN, network.SOCKET_STATE_CLOSE) {
 				l.listener.Close()
 				l.closed = true
+				l.closeCh <- true
+				return l.closeCh
 			}
 		}
 
@@ -106,6 +110,8 @@ func (l *ListenSocket) Stop() {
 			}
 		}
 	}
+
+	return l.closeCh
 }
 
 func (l *ListenSocket) IsClosed() bool {

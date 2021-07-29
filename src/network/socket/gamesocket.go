@@ -2,18 +2,16 @@ package socket
 
 import (
 	"fmt"
-	linklist "github.com/emirpasic/gods/lists/singlylinkedlist"
 	"mmogo/interface"
 	"mmogo/lib/buffer"
 	"mmogo/lib/locker"
 	"mmogo/lib/packet"
+	"mmogo/lib/queue"
 	"mmogo/network"
 	"net"
 	"runtime/debug"
-	"sync"
 	"sync/atomic"
 	"time"
-	"unsafe"
 )
 
 type GameSocket struct {
@@ -21,13 +19,8 @@ type GameSocket struct {
 	connTimeOut time.Duration
 
 	//发送缓冲区
-	sendBuf  *buffer.RingBuffer
-	sendCond *sync.Cond
-
-	//双写缓冲,避免阻塞发送携程
-	sendBuffList  *linklist.List
-	sendBuffList1 *linklist.List
-	sendBuffList2 *linklist.List
+	sendBuf   *buffer.RingBuffer
+	sendQueue *queue.UnsafeFastQueue
 
 	//接受缓冲区
 	recvLock locker.CASLock
@@ -45,16 +38,22 @@ type GameSocket struct {
 
 	handleBinaryPacket func(_interface.BinaryPacket)
 	logger             _interface.Logger
+	mgr                *GameSocketMgr
 }
 
 const max_buff_size = 0x400000 //4M
-
 
 type GameSocketOpt func(socket *GameSocket)
 
 func WithGameLog(logger _interface.Logger) GameSocketOpt {
 	return func(socket *GameSocket) {
 		socket.logger = logger
+	}
+}
+
+func WithSocketMgr(mgr *GameSocketMgr) GameSocketOpt {
+	return func(socket *GameSocket) {
+		socket.mgr = mgr
 	}
 }
 
@@ -98,10 +97,8 @@ func WithGameBinaryPacket(packet _interface.BinaryPacket) GameSocketOpt {
 }
 
 func (socket *GameSocket) init() {
-	socket.sendCond = sync.NewCond(&sync.Mutex{})
-	socket.sendBuffList1 = linklist.New()
-	socket.sendBuffList2 = linklist.New()
-	socket.sendBuffList = socket.sendBuffList1
+	socket.sendQueue = queue.NewUnsafeFastQueue()
+
 	if socket.sendBuf == nil {
 		socket.sendBuf = buffer.NewRingBuffer(64 * 1024)
 	}
@@ -124,8 +121,8 @@ func (socket *GameSocket) init() {
 		socket.logger = defualtLogger(fmt.Sprintf("%s:%s", socket.peerAddr, socket.localAddr))
 	}
 
-	go socket.sendDataRoutine()
-	go socket.recvMsgRoutine()
+	go socket.routineSendMsg()
+	go socket.routineRecvMsg()
 }
 
 func NewGameSocket(addr string, port uint16, opts ...GameSocketOpt) (*GameSocket, error) {
@@ -146,6 +143,9 @@ func NewGameSocket(addr string, port uint16, opts ...GameSocketOpt) (*GameSocket
 		return nil, err
 	}
 
+	if socket.mgr != nil {
+		socket.mgr.AddSocket(socket)
+	}
 	socket.init()
 
 	return socket, nil
@@ -167,7 +167,7 @@ func NewConnSocket(conn net.Conn, opts ...GameSocketOpt) (*GameSocket, error) {
 	return socket, nil
 }
 
-func (socket *GameSocket) sendDataRoutine() {
+func (socket *GameSocket) routineSendMsg() {
 	time.Sleep(time.Second * 2)
 	for {
 		if atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_CLOSE {
@@ -175,21 +175,10 @@ func (socket *GameSocket) sendDataRoutine() {
 			break
 		}
 
-		socket.sendCond.L.Lock()
-		if socket.sendBuffList.Empty() {
-			socket.logger.Infof("socket %v :%v wait send data", unsafe.Pointer(socket), socket.localAddr)
-			socket.sendCond.Wait()
+		buffList := socket.sendQueue.PopALl()
+		if buffList.Empty(){
+			continue
 		}
-
-		socket.logger.Infof("socket %v handle send data :%v", unsafe.Pointer(socket), socket.sendBuffList.Size())
-
-		buffList := socket.sendBuffList
-		if socket.sendBuffList == socket.sendBuffList1 {
-			socket.sendBuffList = socket.sendBuffList2
-		} else {
-			socket.sendBuffList = socket.sendBuffList1
-		}
-		socket.sendCond.L.Unlock()
 
 		totalPacketSize := 0
 		for ; !buffList.Empty(); {
@@ -225,6 +214,9 @@ func (socket *GameSocket) sendDataRoutine() {
 
 func (socket *GameSocket) onClose() {
 	socket.conn.Close()
+	if socket.mgr != nil {
+		socket.mgr.RemoveSocket(socket)
+	}
 }
 
 func (socket *GameSocket) closeSend() {
@@ -239,7 +231,8 @@ func (socket *GameSocket) closeSend() {
 	}
 	socket.hasCloseSend = true
 	socket.socketLock.Unlock()
-	socket.sendCond.Signal()
+
+	socket.sendQueue.Signal()
 }
 
 func (socket *GameSocket) closeRecv() {
@@ -303,19 +296,12 @@ func (socket *GameSocket) SendPacket(packet _interface.BinaryPacket) error {
 		return Err_Send_Packet_Is_Nil
 	}
 
-	socket.sendCond.L.Lock()
-	defer socket.sendCond.L.Unlock()
+	socket.sendQueue.Add(packet)
 
-	f := socket.sendBuffList.Empty()
-	socket.sendBuffList.Add(packet)
-
-	if f {
-		socket.sendCond.Signal()
-	}
 	return nil
 }
 
-func (socket *GameSocket) recvMsgRoutine() {
+func (socket *GameSocket) routineRecvMsg() {
 	for {
 		if atomic.LoadUint32(&socket.state) == network.SOCKET_STATE_CLOSE {
 			socket.exitRecvChan <- true

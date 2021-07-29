@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"mmogo/interface"
 	"mmogo/lib/binaryop"
-	"mmogo/lib/common"
+	"mmogo/lib/util"
 	"unsafe"
 )
 
@@ -171,7 +171,7 @@ func (packet *WorldPacket) ParsePacketHeader(header []byte) (uint32, bool) {
 
 
 	size := *(*uint32)(unsafe.Pointer(&header[sizeOffset]))
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		size = binaryop.SwapUint32(size)
 	}
 	return size, true
@@ -196,7 +196,7 @@ func (packet *WorldPacket) Reset(op uint16) {
 	packet.readIndex = packetHeaderSize
 	packet.writeIndex = packetHeaderSize
 	packet.SetSize(packet.writeIndex)
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		*packet.op = binaryop.SwapUint16(op)
 	} else {
 		*packet.op = op
@@ -204,7 +204,7 @@ func (packet *WorldPacket) Reset(op uint16) {
 }
 
 func (packet *WorldPacket) SetSeqNo(sNo uint32) {
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		*packet.seqNo = binaryop.SwapUint32(sNo)
 	} else {
 		*packet.seqNo = sNo
@@ -212,7 +212,7 @@ func (packet *WorldPacket) SetSeqNo(sNo uint32) {
 }
 
 func (packet *WorldPacket) SetSize(size uint32) {
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		*packet.size = binaryop.SwapUint32(size)
 	} else {
 		*packet.size = size
@@ -220,7 +220,7 @@ func (packet *WorldPacket) SetSize(size uint32) {
 }
 
 func (packet *WorldPacket) SetOp(op uint16) {
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		*packet.op = binaryop.SwapUint16(op)
 	} else {
 		*packet.op = op
@@ -249,7 +249,7 @@ func (packet *WorldPacket) checkPacketSize(len uint32) bool {
 }
 
 func (packet *WorldPacket) GetOpcode() uint16 {
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		return binaryop.SwapUint16(*packet.op)
 	} else {
 		return *packet.op
@@ -257,7 +257,7 @@ func (packet *WorldPacket) GetOpcode() uint16 {
 }
 
 func (packet *WorldPacket) GetSeqNo() uint32 {
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		return binaryop.SwapUint32(*packet.seqNo)
 	} else {
 		return *packet.seqNo
@@ -265,7 +265,7 @@ func (packet *WorldPacket) GetSeqNo() uint32 {
 }
 
 func (packet *WorldPacket) GetSize() uint32 {
-	if common.IsLittleEnd() {
+	if util.IsLittleEnd() {
 		return binaryop.SwapUint32(*packet.size)
 	} else {
 		return *packet.size
@@ -516,7 +516,7 @@ func (packet *WorldPacket) ReadInt16() int16 {
 	if packet.readIndex+2 <= packet.contentCap {
 		ret := *(*int16)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 2
-		if common.IsLittleEnd() {
+		if util.IsLittleEnd() {
 			return binaryop.SwapInt16(ret)
 		}
 		return ret
@@ -533,7 +533,7 @@ func (packet *WorldPacket) ReadInt32() int32 {
 	if packet.readIndex+4 <= packet.contentCap {
 		ret := *(*int32)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 4
-		if common.IsLittleEnd() {
+		if util.IsLittleEnd() {
 			return binaryop.SwapInt32(ret)
 		}
 		return ret
@@ -551,7 +551,7 @@ func (packet *WorldPacket) ReadInt64() int64 {
 		ret := *(*int64)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 8
 
-		if common.IsLittleEnd() {
+		if util.IsLittleEnd() {
 			return binaryop.SwapInt64(ret)
 		}
 		return ret

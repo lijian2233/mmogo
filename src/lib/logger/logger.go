@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"mmogo/lib/net"
+	"mmogo/lib/util"
 	"os"
 	"path"
 	"runtime"
@@ -41,7 +41,7 @@ type Logger struct {
 func NewLogger(conf *Config) (l *Logger, err error) {
 	l = &Logger{conf: conf, level: GetLevel(conf.Level)}
 
-	if l.ip, err = net.GetLocalIp(); err != nil {
+	if l.ip, err = util.GetLocalIp(); err != nil {
 		return
 	}
 

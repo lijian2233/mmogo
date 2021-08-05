@@ -9,13 +9,14 @@ import (
 	"sync"
 )
 
-var HandleThreads *handleThreads
+var HandleThreads = &handleThreads{}
 
 type handleThreads struct {
 	queues []*queue.FastQueue
 	wg     sync.WaitGroup
 	bStop  bool
 	size   uint8
+	once   sync.Once
 }
 
 func (h *handleThreads) Stop() {
@@ -23,37 +24,38 @@ func (h *handleThreads) Stop() {
 	h.wg.Wait()
 }
 
-func (h* handleThreads) PostPacket(accountId uint64, packet *packet.WorldPacket)  {
-	h.queues[int(accountId % uint64(h.size))].Add(packet)
+func (h* handleThreads) PostPacket(accountId uint32, packet *packet.WorldPacket)  {
+	h.queues[int(accountId % uint32(h.size))].Add(packet)
 }
 
 func (h *handleThreads) Start() {
-	threadNum := global.Conf.HandlerThreadNum
-	if threadNum == 0 {
-		threadNum = 4
-	}
+	h.once.Do(func() {
+		threadNum := global.Conf.HandlerThreadNum
+		if threadNum == 0 {
+			threadNum = 4
+		}
 
-	if threadNum > 128 {
-		threadNum = 128
-	}
+		if threadNum > 128 {
+			threadNum = 128
+		}
 
-	HandleThreads = &handleThreads{}
-	HandleThreads.queues = make([]*queue.FastQueue, threadNum, threadNum)
+		h.queues = make([]*queue.FastQueue, threadNum, threadNum)
 
-	HandleThreads.wg.Add(int(threadNum))
-	h.size = threadNum
-	for i := 0; i < int(threadNum); i++ {
-		HandleThreads.queues[i] = queue.NewFastQueue()
-		go thread(i)
-	}
+		h.wg.Add(int(threadNum))
+		h.size = threadNum
+		for i := 0; i < int(threadNum); i++ {
+			h.queues[i] = queue.NewFastQueue()
+			go h.thread(i)
+		}
+	})
 }
 
-func thread(index int) {
-	queue := HandleThreads.queues[index]
+func (h *handleThreads)thread(index int) {
+	queue := h.queues[index]
 
 	for {
-		if HandleThreads.bStop {
-			HandleThreads.wg.Done()
+		if h.bStop {
+			h.wg.Done()
 			return
 		}
 
@@ -64,12 +66,13 @@ func thread(index int) {
 			}
 
 			d, _ := list.Get(0)
+			list.Remove(0)
 			packet, _ := d.(_interface.BinaryPacket)
-			fmt.Println(packet)
+			fmt.Println(fmt.Sprintf("thread :%d recv packet :%+v", index, packet))
 		}
 
-		if HandleThreads.bStop {
-			HandleThreads.wg.Done()
+		if h.bStop {
+			h.wg.Done()
 			return
 		}
 	}

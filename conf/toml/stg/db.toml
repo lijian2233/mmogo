@@ -1,0 +1,32 @@
+# This is a TOML document.
+handler_thread_num = 10
+
+[gamedb]
+host            = "localhost"
+port            = 3306
+user            = "root"
+password        = "123456"
+charset         = "utf8mb4"
+database        = "opay_local_shopping"
+max_idle_conns  = 10
+max_open_conns  = 20
+debug           = true
+handler_thread_num = 10
+
+[logger]
+dir          = "./logs"
+level        = "debug"
+time_format  = "2006-01-02 15:04:05.000"
+color        = true
+terminal     = true
+show_ip      = false
+
+[redis]
+host            = "localhost"
+port            = 6379
+auth            = ""
+
+[server]
+ip="127.0.0.1"
+port=8778
+debug=false

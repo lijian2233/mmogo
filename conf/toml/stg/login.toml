@@ -1,0 +1,4 @@
+[login]
+ip="127.0.0.1"
+port=6610
+mode="debug"

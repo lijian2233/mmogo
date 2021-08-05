@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"mmogo/common"
+	"mmogo/lib/packet"
 	"mmogo/network/listen"
 	"mmogo/server/db/global"
 	"mmogo/server/db/handle"
+	"net"
 	"runtime"
 	"time"
 )
@@ -60,8 +62,11 @@ func main() {
 		log.Fatalf("init redis error")
 	}
 
-	listenSocket.Start()
+	go listenSocket.Start()
+	time.Sleep(time.Second * 1)
 	exit := common.SetUpSignal()
+
+	//go test()
 	signal := <-exit
 	global.Log.Infof("capture sigal %v", signal)
 
@@ -88,4 +93,19 @@ func main() {
 	global.GameDB.Close()
 
 	global.Log.Infof("db stop complete")
+}
+
+func test()  {
+	connStr := fmt.Sprintf("%s:%d", global.Conf.Server.Ip, global.Conf.Server.Port)
+	conn, err := net.Dial("tcp", connStr)
+	if err != nil {
+		fmt.Println("test connect error ", err)
+	}
+
+	for i:=0; i<20; i++ {
+		p := packet.NewWorldPacket(uint16(i), 0)
+		p.SetSeqNo(uint32(i))
+		n, err := conn.Write(p.GetPacket(false))
+		fmt.Println(n, err)
+	}
 }

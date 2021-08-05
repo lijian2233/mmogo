@@ -171,6 +171,9 @@ func (r *RingBuffer) WriteByte(c byte) error {
 }
 
 func (r *RingBuffer) IncWriteIndex(inc int) {
+	if inc == 0 {
+		return
+	}
 	r.w = (r.w + inc) % r.size
 	if r.r == r.w {
 		r.isFull = true

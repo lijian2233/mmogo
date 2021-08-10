@@ -8,7 +8,7 @@ import (
 	"mmogo/lib/packet"
 	"mmogo/network/listen"
 	"mmogo/server/db/global"
-	"mmogo/server/db/handle"
+	"mmogo/server/db/start"
 	"net"
 	"runtime"
 	"time"
@@ -21,19 +21,10 @@ var (
 	gitHash    = "master"
 )
 
-func main() {
-	// parse flag
-	flag.Parse()
-
-	if *version {
-		fmt.Println("build time:", buildTime)
-		fmt.Println("git hash:  ", gitHash)
-		return
-	}
-
+func Start(confFile string)  {
 	// set max cpu core
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	if err := global.LoadFromFile(*configFile); err != nil {
+	if err := global.LoadFromFile(confFile); err != nil {
 		log.Fatalf("parse config file error :%v", err)
 	}
 
@@ -51,12 +42,12 @@ func main() {
 
 	global.InitSocketMgr()
 
-	handle.HandleThreads.Start()
+	start.HandleThreads.Start()
 
 	listenSocket, err := listen.NewListenSocket(global.Conf.Server.Ip,
 		global.Conf.Server.Port,
 		listen.WithLog(global.Log),
-		listen.WithHandler(handle.HandleAcceptConn))
+		listen.WithHandler(start.HandleAcceptConn))
 
 	if err != nil {
 		log.Fatalf("init redis error")
@@ -80,7 +71,7 @@ func main() {
 	global.Log.Infof("now close handle threads ..., wait at most 15 second")
 	exitHandleThreadCh := make(chan bool, 1)
 	go func() {
-		handle.HandleThreads.Stop()
+		start.HandleThreads.Stop()
 		exitHandleThreadCh <- true
 	}()
 
@@ -93,6 +84,19 @@ func main() {
 	global.GameDB.Close()
 
 	global.Log.Infof("db stop complete")
+}
+
+func main() {
+	// parse flag
+	flag.Parse()
+
+	if *version {
+		fmt.Println("build time:", buildTime)
+		fmt.Println("git hash:  ", gitHash)
+		return
+	}
+
+	Start(*configFile)
 }
 
 func test()  {

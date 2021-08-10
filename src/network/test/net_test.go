@@ -58,7 +58,7 @@ func handleGameSocketAccept(conn net.Conn) {
 	 	socket.WithGameSendBuffSize(256),
 	 	socket.WithGameRecivBuffSize(512),
 	 	socket.WithGameLog(log),
-	 	socket.WithGameHandlePacket(func(pack _interface.BinaryPacket) {
+	 	socket.WithGameHandlePacket(func(socket *socket.GameSocket, pack _interface.BinaryPacket) {
 	 		p , ok := pack.(*packet.WorldPacket)
 	 		if ok {
 	 			parsePacket(p)

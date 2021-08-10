@@ -2,16 +2,16 @@ package start
 
 import (
 	"fmt"
-	_interface "mmogo/interface"
 	"mmogo/lib/packet"
 	"mmogo/lib/queue"
+	"mmogo/network/socket"
 	"mmogo/server/db/global"
 	"sync"
 )
 
-var HandleThreads = &handleThreads{}
+var WorkThreads = &workThreads{}
 
-type handleThreads struct {
+type workThreads struct {
 	queues []*queue.FastQueue
 	wg     sync.WaitGroup
 	bStop  bool
@@ -19,16 +19,19 @@ type handleThreads struct {
 	once   sync.Once
 }
 
-func (h *handleThreads) Stop() {
+func (h *workThreads) Stop() {
 	h.bStop = true
 	h.wg.Wait()
 }
 
-func (h* handleThreads) PostPacket(accountId uint32, packet *packet.WorldPacket)  {
-	h.queues[int(accountId % uint32(h.size))].Add(packet)
+func (h* workThreads) PostPacket(gameSocket *socket.GameSocket, accountId uint32, packet *packet.WorldPacket)  {
+	h.queues[int(accountId % uint32(h.size))].Add(&global.GameQueueData{
+		Socket:gameSocket,
+		Packet:packet,
+	})
 }
 
-func (h *handleThreads) Start() {
+func (h *workThreads) Start() {
 	h.once.Do(func() {
 		threadNum := global.Conf.HandlerThreadNum
 		if threadNum == 0 {
@@ -50,7 +53,7 @@ func (h *handleThreads) Start() {
 	})
 }
 
-func (h *handleThreads)thread(index int) {
+func (h *workThreads)thread(index int) {
 	queue := h.queues[index]
 
 	for {
@@ -67,8 +70,8 @@ func (h *handleThreads)thread(index int) {
 
 			d, _ := list.Get(0)
 			list.Remove(0)
-			packet, _ := d.(_interface.BinaryPacket)
-			fmt.Println(fmt.Sprintf("thread :%d recv packet :%+v", index, packet))
+			data, _ := d.(*global.GameQueueData)
+			fmt.Println(fmt.Sprintf("thread :%d recv packet :%+v", index, data.Packet))
 		}
 
 		if h.bStop {

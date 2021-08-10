@@ -8,15 +8,15 @@ import (
 	"net"
 )
 
-func HandleAcceptConn(conn net.Conn) {
+func GameAcceptConn(conn net.Conn) {
 	socket.NewConnSocket(conn,
 		socket.WithGameSendBuffSize(512*1024),
 		socket.WithGameRecivBuffSize(10*1024),
 		socket.WithGameLog(global.Log),
-		socket.WithGameHandlePacket(func(binaryPacket _interface.BinaryPacket) {
+		socket.WithGameHandlePacket(func(socket *socket.GameSocket, binaryPacket _interface.BinaryPacket) {
 			p, ok := binaryPacket.(*packet.WorldPacket)
 			if ok {
-				HandleThreads.PostPacket(p.GetSeqNo(), p)
+				WorkThreads.PostPacket(socket, p.GetSeqNo(), p)
 			}
 		}),
 	)

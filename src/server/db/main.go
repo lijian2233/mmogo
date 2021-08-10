@@ -42,12 +42,12 @@ func Start(confFile string)  {
 
 	global.InitSocketMgr()
 
-	start.HandleThreads.Start()
+	start.WorkThreads.Start()
 
 	listenSocket, err := listen.NewListenSocket(global.Conf.Server.Ip,
 		global.Conf.Server.Port,
 		listen.WithLog(global.Log),
-		listen.WithHandler(start.HandleAcceptConn))
+		listen.WithHandler(start.GameAcceptConn))
 
 	if err != nil {
 		log.Fatalf("init redis error")
@@ -71,7 +71,7 @@ func Start(confFile string)  {
 	global.Log.Infof("now close handle threads ..., wait at most 15 second")
 	exitHandleThreadCh := make(chan bool, 1)
 	go func() {
-		start.HandleThreads.Stop()
+		start.WorkThreads.Stop()
 		exitHandleThreadCh <- true
 	}()
 

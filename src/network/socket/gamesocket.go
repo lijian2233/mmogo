@@ -36,7 +36,7 @@ type GameSocket struct {
 	socketLock locker.CASLock
 	packetType _interface.BinaryPacket
 
-	handleBinaryPacket func(_interface.BinaryPacket)
+	handleBinaryPacket func(*GameSocket, _interface.BinaryPacket)
 	logger             _interface.Logger
 	mgr                *GameSocketMgr
 }
@@ -57,7 +57,7 @@ func WithSocketMgr(mgr *GameSocketMgr) GameSocketOpt {
 	}
 }
 
-func WithGameHandlePacket(h func(packet _interface.BinaryPacket)) GameSocketOpt {
+func WithGameHandlePacket(h func(socket *GameSocket, packet _interface.BinaryPacket)) GameSocketOpt {
 	return func(socket *GameSocket) {
 		socket.handleBinaryPacket = h
 	}
@@ -351,7 +351,7 @@ func (socket *GameSocket) routineRecvMsg() {
 						//full packet
 						packet, _ := socket.packetType.BuildPacket(rbuf, false)
 						socket.recvBuf.Erase(int(packetSize))
-						socket.handleBinaryPacket(packet)
+						socket.handleBinaryPacket(socket, packet)
 					} else {
 						buf := make([]byte, packetSize, packetSize)
 						copy(buf, rbuf)
@@ -365,7 +365,7 @@ func (socket *GameSocket) routineRecvMsg() {
 						copy(buf[wlen:], rbuf)
 						socket.recvBuf.Erase(left)
 						packet, _ := socket.packetType.BuildPacket(rbuf, true)
-						socket.handleBinaryPacket(packet)
+						socket.handleBinaryPacket(socket, packet)
 					}
 				} else {
 					break

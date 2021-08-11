@@ -26,7 +26,7 @@ var BuildPacketError = errors.New("build packet error")
 * 2bytes op
 * 3bytes packet length
  */
-type WorldPacket struct {
+type UtilPacket struct {
 	content    []byte //message body
 	seqNo      *uint32
 	op         *uint16
@@ -36,15 +36,15 @@ type WorldPacket struct {
 	contentCap uint32
 }
 
-func (packet* WorldPacket) BodySize() uint32 {
+func (packet* UtilPacket) BodySize() uint32 {
 	return packet.writeIndex - packet.GetSize()
 }
 
-func (packet* WorldPacket) HeaderSize() uint32  {
+func (packet* UtilPacket) HeaderSize() uint32  {
 	return packetHeaderSize
 }
 
-func (packet* WorldPacket) GetBody(safe ...interface{}) []byte {
+func (packet* UtilPacket) GetBody(safe ...interface{}) []byte {
 	bSafe := true
 	if len(safe) > 0 {
 		v, ok := safe[0].(bool)
@@ -66,7 +66,7 @@ func (packet* WorldPacket) GetBody(safe ...interface{}) []byte {
 	}
 }
 
-func (packet* WorldPacket) GetHeader(safe ...interface{}) []byte  {
+func (packet* UtilPacket) GetHeader(safe ...interface{}) []byte  {
 	bSafe := true
 	if len(safe) > 0 {
 		v, ok := safe[0].(bool)
@@ -85,7 +85,7 @@ func (packet* WorldPacket) GetHeader(safe ...interface{}) []byte  {
 	}
 }
 
-func (packet* WorldPacket) GetPacket(safe ...interface{}) []byte  {
+func (packet* UtilPacket) GetPacket(safe ...interface{}) []byte  {
 	bSafe := true
 	if len(safe) > 0 {
 		v, ok := safe[0].(bool)
@@ -104,8 +104,8 @@ func (packet* WorldPacket) GetPacket(safe ...interface{}) []byte  {
 	}
 }
 
-func NewWorldPacket(op uint16, cap uint32) *WorldPacket {
-	packet := new(WorldPacket)
+func NewWorldPacket(op uint16, cap uint32) *UtilPacket {
+	packet := new(UtilPacket)
 	if cap >= maxContentSize {
 		panic(fmt.Sprintf("packet must < %x", maxContentSize))
 	}
@@ -123,11 +123,11 @@ func NewWorldPacket(op uint16, cap uint32) *WorldPacket {
 	return packet
 }
 
-func (packet* WorldPacket) PacketSize() uint32 {
+func (packet* UtilPacket) PacketSize() uint32 {
 	return packet.GetSize()
 }
 
-func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (_interface.BinaryPacket, error){
+func (packet* UtilPacket) BuildPacket(bytes []byte, reuseBuf bool) (_interface.BinaryPacket, error){
 	packetSize, ok := packet.ParsePacketHeader(bytes)
 	if !ok {
 		return nil, BuildPacketError
@@ -138,7 +138,7 @@ func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (_interface.
 	}
 
 	if reuseBuf {
-		packet = new(WorldPacket)
+		packet = new(UtilPacket)
 		packet.content = bytes
 		packet.readIndex = packetHeaderSize
 		packet.writeIndex = uint32(len(bytes))
@@ -149,7 +149,7 @@ func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (_interface.
 		packet.SetSize(packet.writeIndex)
 		return packet, nil
 	}else{
-		packet = new(WorldPacket)
+		packet = new(UtilPacket)
 		packet.content = make([]byte, packetSize, packetSize)
 		copy(packet.content, bytes[0:packetSize])
 		packet.readIndex = packetHeaderSize
@@ -164,7 +164,7 @@ func (packet* WorldPacket) BuildPacket(bytes []byte, reuseBuf bool) (_interface.
 }
 
 
-func (packet *WorldPacket) ParsePacketHeader(header []byte) (uint32, bool) {
+func (packet *UtilPacket) ParsePacketHeader(header []byte) (uint32, bool) {
 	if header == nil || uint32(len(header)) < packetHeaderSize {
 		return 0, false
 	}
@@ -177,22 +177,22 @@ func (packet *WorldPacket) ParsePacketHeader(header []byte) (uint32, bool) {
 	return size, true
 }
 
-func (packet *WorldPacket) GetReadIndex() uint32 {
+func (packet *UtilPacket) GetReadIndex() uint32 {
 	return packet.readIndex
 }
 
-func (packet *WorldPacket) GetWriteIndex() uint32 {
+func (packet *UtilPacket) GetWriteIndex() uint32 {
 	return packet.writeIndex
 }
 
-func (packet *WorldPacket) GetContent() []byte {
+func (packet *UtilPacket) GetContent() []byte {
 	x := (uintptr)(unsafe.Pointer(&packet.content[0]))
 	h := [3]uintptr{x, uintptr(packet.writeIndex), uintptr(packet.writeIndex)}
 	buf := *(*[]byte)(unsafe.Pointer(&h))
 	return buf
 }
 
-func (packet *WorldPacket) Reset(op uint16) {
+func (packet *UtilPacket) Reset(op uint16) {
 	packet.readIndex = packetHeaderSize
 	packet.writeIndex = packetHeaderSize
 	packet.SetSize(packet.writeIndex)
@@ -203,7 +203,7 @@ func (packet *WorldPacket) Reset(op uint16) {
 	}
 }
 
-func (packet *WorldPacket) SetSeqNo(sNo uint32) {
+func (packet *UtilPacket) SetSeqNo(sNo uint32) {
 	if util.IsLittleEnd() {
 		*packet.seqNo = binaryop.SwapUint32(sNo)
 	} else {
@@ -211,7 +211,7 @@ func (packet *WorldPacket) SetSeqNo(sNo uint32) {
 	}
 }
 
-func (packet *WorldPacket) SetSize(size uint32) {
+func (packet *UtilPacket) SetSize(size uint32) {
 	if util.IsLittleEnd() {
 		*packet.size = binaryop.SwapUint32(size)
 	} else {
@@ -219,7 +219,7 @@ func (packet *WorldPacket) SetSize(size uint32) {
 	}
 }
 
-func (packet *WorldPacket) SetOp(op uint16) {
+func (packet *UtilPacket) SetOp(op uint16) {
 	if util.IsLittleEnd() {
 		*packet.op = binaryop.SwapUint16(op)
 	} else {
@@ -227,7 +227,7 @@ func (packet *WorldPacket) SetOp(op uint16) {
 	}
 }
 
-func (packet *WorldPacket) checkPacketSize(len uint32) bool {
+func (packet *UtilPacket) checkPacketSize(len uint32) bool {
 	if packet.writeIndex+len > maxContentSize {
 		return false
 	}
@@ -248,7 +248,7 @@ func (packet *WorldPacket) checkPacketSize(len uint32) bool {
 	return true
 }
 
-func (packet *WorldPacket) GetOpcode() uint16 {
+func (packet *UtilPacket) GetOpcode() uint16 {
 	if util.IsLittleEnd() {
 		return binaryop.SwapUint16(*packet.op)
 	} else {
@@ -256,7 +256,7 @@ func (packet *WorldPacket) GetOpcode() uint16 {
 	}
 }
 
-func (packet *WorldPacket) GetSeqNo() uint32 {
+func (packet *UtilPacket) GetSeqNo() uint32 {
 	if util.IsLittleEnd() {
 		return binaryop.SwapUint32(*packet.seqNo)
 	} else {
@@ -264,7 +264,7 @@ func (packet *WorldPacket) GetSeqNo() uint32 {
 	}
 }
 
-func (packet *WorldPacket) GetSize() uint32 {
+func (packet *UtilPacket) GetSize() uint32 {
 	if util.IsLittleEnd() {
 		return binaryop.SwapUint32(*packet.size)
 	} else {
@@ -274,7 +274,7 @@ func (packet *WorldPacket) GetSize() uint32 {
 
 var err_input_buf_size = errors.New("input byte lenght < size")
 
-func (packet *WorldPacket) WriteBytes(b []byte, size int) (uint32, error) {
+func (packet *UtilPacket) WriteBytes(b []byte, size int) (uint32, error) {
 	if size >= 0x01000000 {
 		return packet.writeIndex, MaxSizeError
 	}
@@ -293,7 +293,7 @@ func (packet *WorldPacket) WriteBytes(b []byte, size int) (uint32, error) {
 	return packet.writeIndex, nil
 }
 
-func (packet *WorldPacket) WriteString(str string) (uint32, error) {
+func (packet *UtilPacket) WriteString(str string) (uint32, error) {
 	size := len(str)
 	if size >= 0x01000000 {
 		return packet.writeIndex, MaxSizeError
@@ -317,7 +317,7 @@ func (packet *WorldPacket) WriteString(str string) (uint32, error) {
 	return packet.writeIndex, nil
 }
 
-func (packet *WorldPacket) ReadString() string {
+func (packet *UtilPacket) ReadString() string {
 	if packet.readIndex+3 <= packet.contentCap+packetHeaderSize {
 		b := [4]byte{0x00,}
 		copy(b[1:], packet.content[packet.readIndex:])
@@ -333,7 +333,7 @@ func (packet *WorldPacket) ReadString() string {
 	return ""
 }
 
-func (packet *WorldPacket) WriteByte(b byte, wIndex ...uint32) (uint32, error) {
+func (packet *UtilPacket) WriteByte(b byte, wIndex ...uint32) (uint32, error) {
 	writeIndex := packet.writeIndex
 	if wIndex != nil {
 		writeIndex = wIndex[0]
@@ -367,7 +367,7 @@ func getIntTypeSize(num interface{}) uint32 {
 	}
 }
 
-func (packet *WorldPacket) WriteNum(num interface{}, wIndex ...uint32) (uint32, error) {
+func (packet *UtilPacket) WriteNum(num interface{}, wIndex ...uint32) (uint32, error) {
 	writeIndex := packet.writeIndex
 	if wIndex != nil {
 		writeIndex = wIndex[0]
@@ -499,7 +499,7 @@ func (packet *WorldPacket) WriteNum(num interface{}, wIndex ...uint32) (uint32, 
 	}
 }
 
-func (packet *WorldPacket) ReadInt8() int8 {
+func (packet *UtilPacket) ReadInt8() int8 {
 	if packet.readIndex+1 <= packet.contentCap {
 		packet.readIndex += 1
 		return int8(packet.content[packet.readIndex])
@@ -508,11 +508,11 @@ func (packet *WorldPacket) ReadInt8() int8 {
 	return 0
 }
 
-func (packet *WorldPacket) ReadUint8() uint8 {
+func (packet *UtilPacket) ReadUint8() uint8 {
 	return uint8(packet.ReadInt8())
 }
 
-func (packet *WorldPacket) ReadInt16() int16 {
+func (packet *UtilPacket) ReadInt16() int16 {
 	if packet.readIndex+2 <= packet.contentCap {
 		ret := *(*int16)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 2
@@ -525,11 +525,11 @@ func (packet *WorldPacket) ReadInt16() int16 {
 	return 0
 }
 
-func (packet *WorldPacket) ReadUint16() uint16 {
+func (packet *UtilPacket) ReadUint16() uint16 {
 	return uint16(packet.ReadInt16())
 }
 
-func (packet *WorldPacket) ReadInt32() int32 {
+func (packet *UtilPacket) ReadInt32() int32 {
 	if packet.readIndex+4 <= packet.contentCap {
 		ret := *(*int32)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 4
@@ -542,11 +542,11 @@ func (packet *WorldPacket) ReadInt32() int32 {
 	return 0
 }
 
-func (packet *WorldPacket) ReadUint32() uint32 {
+func (packet *UtilPacket) ReadUint32() uint32 {
 	return uint32(packet.ReadInt32())
 }
 
-func (packet *WorldPacket) ReadInt64() int64 {
+func (packet *UtilPacket) ReadInt64() int64 {
 	if packet.readIndex+8 <= packet.contentCap {
 		ret := *(*int64)(unsafe.Pointer(&packet.content[packet.readIndex]))
 		packet.readIndex += 8
@@ -560,19 +560,19 @@ func (packet *WorldPacket) ReadInt64() int64 {
 	return 0
 }
 
-func (packet *WorldPacket) ReadUInt64() uint64 {
+func (packet *UtilPacket) ReadUInt64() uint64 {
 	return uint64(packet.ReadInt64())
 }
 
-func (packet *WorldPacket) ReadInt() int {
+func (packet *UtilPacket) ReadInt() int {
 	return int(packet.ReadInt64())
 }
 
-func (packet *WorldPacket) ReadUint() uint {
+func (packet *UtilPacket) ReadUint() uint {
 	return uint(packet.ReadInt64())
 }
 
-func (packet *WorldPacket) WriteBool(b bool) (uint32, error) {
+func (packet *UtilPacket) WriteBool(b bool) (uint32, error) {
 	bb := byte(0)
 	if b {
 		bb = 1
@@ -582,7 +582,7 @@ func (packet *WorldPacket) WriteBool(b bool) (uint32, error) {
 	return packet.WriteByte(bb)
 }
 
-func (packet *WorldPacket) ReadBool() bool {
+func (packet *UtilPacket) ReadBool() bool {
 	val := packet.ReadUint8()
 	return val != 0
 }

@@ -24,7 +24,7 @@ func (h *workThreads) Stop() {
 	h.wg.Wait()
 }
 
-func (h* workThreads) PostPacket(gameSocket *socket.GameSocket, accountId uint32, packet *packet.WorldPacket)  {
+func (h* workThreads) PostPacket(gameSocket *socket.GameSocket, accountId uint32, packet *packet.UtilPacket)  {
 	h.queues[int(accountId % uint32(h.size))].Add(&global.GameQueueData{
 		Socket:gameSocket,
 		Packet:packet,

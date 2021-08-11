@@ -111,7 +111,7 @@ func (socket *GameSocket) init() {
 	socket.exitRecvChan = make(chan bool, 1)
 
 	if socket.packetType == nil {
-		socket.packetType = &packet.WorldPacket{}
+		socket.packetType = &packet.UtilPacket{}
 	}
 
 	socket.localAddr = socket.conn.LocalAddr().String()

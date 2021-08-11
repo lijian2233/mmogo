@@ -14,7 +14,7 @@ func GameAcceptConn(conn net.Conn) {
 		socket.WithGameRecivBuffSize(10*1024),
 		socket.WithGameLog(global.Log),
 		socket.WithGameHandlePacket(func(socket *socket.GameSocket, binaryPacket _interface.BinaryPacket) {
-			p, ok := binaryPacket.(*packet.WorldPacket)
+			p, ok := binaryPacket.(*packet.UtilPacket)
 			if ok {
 				WorkThreads.PostPacket(socket, p.GetSeqNo(), p)
 			}

@@ -21,7 +21,7 @@ func init() {
 
 var tt *testing.T
 
-func parsePacket(packet *packet.WorldPacket) {
+func parsePacket(packet *packet.UtilPacket) {
 	switch packet.GetOpcode() {
 	case 201:
 		{
@@ -59,7 +59,7 @@ func handleGameSocketAccept(conn net.Conn) {
 	 	socket.WithGameRecivBuffSize(512),
 	 	socket.WithGameLog(log),
 	 	socket.WithGameHandlePacket(func(socket *socket.GameSocket, pack _interface.BinaryPacket) {
-	 		p , ok := pack.(*packet.WorldPacket)
+	 		p , ok := pack.(*packet.UtilPacket)
 	 		if ok {
 	 			parsePacket(p)
 			}

@@ -10,10 +10,10 @@ import (
 
 type GameQueueData struct {
 	Socket *socket.GameSocket
-	Packet *packet.WorldPacket
+	Packet *packet.UtilPacket
 }
 
-type GamePacketHandler func(socket *socket.GameSocket, recvPacket *packet.WorldPacket, ret *packet.WorldPacket)
+type GamePacketHandler func(socket *socket.GameSocket, recvPacket *packet.UtilPacket, ret *packet.UtilPacket)
 
 var GamePacketHandlerMgr = &gamePacketHandlerMgr{
 	id2Handler:  map[uint16]GamePacketHandler{},
